@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "grot"
+
+begin
+  exit Grot::App.new.run
+rescue Interrupt
+  puts "\nOperation cancelled by user."
+  exit 130
+rescue => e
+  puts "Error: #{e.message}"
+  puts e.backtrace.join("\n") if ENV['DEBUG']
+  exit 1
+end

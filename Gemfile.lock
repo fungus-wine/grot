@@ -1,0 +1,57 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    citrus (3.0.2)
+    docile (1.4.1)
+    ffi (1.17.1)
+    ffi (1.17.1-aarch64-linux-gnu)
+    ffi (1.17.1-aarch64-linux-musl)
+    ffi (1.17.1-arm-linux-gnu)
+    ffi (1.17.1-arm-linux-musl)
+    ffi (1.17.1-arm64-darwin)
+    ffi (1.17.1-x86-linux-gnu)
+    ffi (1.17.1-x86-linux-musl)
+    ffi (1.17.1-x86_64-darwin)
+    ffi (1.17.1-x86_64-linux-gnu)
+    ffi (1.17.1-x86_64-linux-musl)
+    gosu (1.4.6)
+    minitest (5.25.5)
+    mocha (2.7.1)
+      ruby2_keywords (>= 0.0.5)
+    rake (13.2.1)
+    ruby2_keywords (0.0.5)
+    rubyserial (0.6.0)
+      ffi (~> 1.9, >= 1.9.3)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.1)
+    simplecov_json_formatter (0.1.4)
+    toml-rb (2.2.0)
+      citrus (~> 3.0, > 3.0)
+
+PLATFORMS
+  aarch64-linux-gnu
+  aarch64-linux-musl
+  arm-linux-gnu
+  arm-linux-musl
+  arm64-darwin
+  ruby
+  x86-linux-gnu
+  x86-linux-musl
+  x86_64-darwin
+  x86_64-linux-gnu
+  x86_64-linux-musl
+
+DEPENDENCIES
+  gosu (~> 1.4, >= 1.4.6)
+  minitest (~> 5.18)
+  mocha (~> 2.1)
+  rake (~> 13.0)
+  rubyserial (~> 0.6)
+  simplecov (~> 0.22)
+  toml-rb (~> 2.2)
+
+BUNDLED WITH
+   2.6.6

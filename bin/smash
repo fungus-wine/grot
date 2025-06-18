@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+path = Dir.pwd
+pwd = File.basename(path)
+
+mash_output_file = "#{pwd}.mash"
+# plan_file = "#{path}/planning/plan.md"
+requirements_file = "#{path}/planning/project_requirements.md"
+output_file = "#{path}/#{pwd}.smash"
+
+begin
+  system("mash") or raise "Failed to execute mash command"
+
+  # Check if all input files exist
+  unless File.exist?(mash_output_file)
+    puts "DEBUG: Mash output file: #{mash_output_file}"
+    raise "Mash output file not found at #{mash_output_file}"
+  end
+  # unless File.exist?(plan_file)
+  #   raise "Plan file not found at #{plan_file}"
+  # end
+  unless File.exist?(requirements_file)
+    raise "Requirements file not found at #{requirements_file}"
+  end
+
+  # Open the output file for writing
+  File.open(output_file, "w") do |output|
+    # Write Mash output section
+    output.puts "# Mash Command Output"
+    output.puts "# ==================="
+    output.puts "```"
+    output.write(File.read(mash_output_file))
+    output.puts "```"
+    output.puts "\n"
+
+    # Write Plan section
+    # output.puts "# Project Plan"
+    # output.puts "# ============"
+    # output.puts "```markdown"
+    # output.write(File.read(plan_file))
+    # output.puts "```"
+    # output.puts "\n"
+
+    # Write Requirements section
+    output.puts "# Project Requirements"
+    output.puts "# ===================="
+    output.puts "```markdown"
+    output.write(File.read(requirements_file))
+    output.puts "```"
+  end
+
+  # Delete the mash output file
+  File.delete(mash_output_file) if File.exist?(mash_output_file)
+  
+  puts "Successfully created combined file: #{output_file}"
+  puts "Deleted temporary mash output file: #{mash_output_file}"
+
+rescue StandardError => e
+  puts "Error: #{e.message}"
+  exit 1
+end

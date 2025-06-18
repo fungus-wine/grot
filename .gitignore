@@ -1,0 +1,21 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+
+# RSpec examples file
+/spec/examples.txt
+
+# For those who install the gem locally
+*.gem
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Claude Code files
+/.claude/
