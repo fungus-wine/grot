@@ -18,11 +18,6 @@ Grot is a Ruby gem that provides a command-line tool for Arduino development wit
 - `gem build grot.gemspec` - Build the gem
 - `gem install grot-VERSION.gem` - Install locally
 
-### Running the Application
-- `./exe/grot` - Run the main executable
-- `bundle exec grot COMMAND` - Run via bundler
-- `ENV['DEBUG']=true ./exe/grot COMMAND` - Run with debug output
-
 ## Architecture Overview
 
 ### Core Components
@@ -79,5 +74,4 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - Coverage reports generated to `coverage/` directory
 
 # IMPORTANT: Never add Claude/Anthropic footers to commit messages
-  Do not add any "Generated with Claude Code" or "Co-Authored-By: Claude" footers to any commits.
-  Keep commit messages clean and concise without AI attribution.
+  Do not add any "Generated with Claude Code" or "Co-Authored-By: Claude" footers to any commits. Keep commit messages clean and concise without AI attribution.
