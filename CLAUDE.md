@@ -77,3 +77,7 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - Helper utilities in `test_helper.rb`
 - Tests organized by module/component
 - Coverage reports generated to `coverage/` directory
+
+# IMPORTANT: Never add Claude/Anthropic footers to commit messages
+  Do not add any "Generated with Claude Code" or "Co-Authored-By: Claude" footers to any commits.
+  Keep commit messages clean and concise without AI attribution.
