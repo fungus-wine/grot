@@ -85,14 +85,6 @@ module Grot
           end
         end
         
-        # Apply theme defaults if available
-        @config[:theme] ||= {}
-        if registry && registry[:theme]
-          theme_defaults = registry[:theme].defaults
-          theme_defaults.each do |key, value|
-            @config[:theme][key] ||= value
-          end
-        end
         
         # Apply keyboard defaults if available
         @config[:keyboard] ||= {}

@@ -13,7 +13,6 @@ require "grot/config/config_registry"
 require "grot/config/defaults/board_defaults"
 require "grot/config/defaults/keyboard_defaults"
 require "grot/config/defaults/interface_defaults"
-require "grot/config/defaults/theme_defaults"
 
 require "grot/config/config_manager"
 
