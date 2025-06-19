@@ -163,7 +163,7 @@ module Grot
           # target_core = "#{DEFAULTS[:giga_options][:target_core]}"     # Target processor core: "CM4" or "CM7"
           # flash_split = #{DEFAULTS[:giga_options][:flash_split]}       # Memory split ratio (0.0 to 1.0)
           
-          [esp32_options] 
+          [esp32_options]
           # Options for ESP32-S3 boards
           # core_config = "#{DEFAULTS[:esp32_options][:core_config]}"    # Core usage: "dual", "single-0", "single-1"
           # frequency = #{DEFAULTS[:esp32_options][:frequency]}          # CPU frequency in MHz: 80, 160, or 240
