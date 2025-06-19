@@ -26,8 +26,9 @@ module Grot
         def customize_board_command(cmd_parts, command)
           command_definition = Grot::Commands::CommandRegistry.get_command(command)
           
-          # Skip board-specific modifications if not required
-          return if command_definition[:board_specific] == false
+          # Skip board-specific modifications if not required (commands without fqbn are not board-specific)
+          requirements = command_definition[:requirements] || []
+          return unless requirements.include?(:fqbn)
           
           if command == 'load'
             # For upload command, ensure compilation happened with the right properties

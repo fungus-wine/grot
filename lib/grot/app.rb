@@ -118,14 +118,15 @@ module Grot
     
     def handle_command(command_name, command_definition)
       # Load config if required
-      if command_definition[:requires_config]
+      requirements = command_definition[:requirements] || []
+      if requirements.include?(:config)
         return 1 unless load_config_successfully?
         validate_config(command_definition)
       end
       
-      # Create board strategy if needed for later use
+      # Create board strategy if needed for later use (commands that require fqbn are board-specific)
       board_strategy = nil
-      if command_definition[:board_specific] && @config && @config.dig(:basic, :fqbn)
+      if requirements.include?(:fqbn) && @config && @config.dig(:basic, :fqbn)
         board_strategy = Boards::BoardStrategyFactory.create_strategy(@config)
       end
       
@@ -141,7 +142,7 @@ module Grot
         # Check if it's a proc (custom handler) or a string (CLI command)
         if command_definition[:action].is_a?(Proc)
           # Pass config to handler only if it's required
-          if command_definition[:requires_config]
+          if requirements.include?(:config)
             result = command_definition[:action].call(self, @config)
             # For handlers that may have set a last executed command
             cmd = @last_executed_command if instance_variable_defined?(:@last_executed_command)
@@ -150,7 +151,7 @@ module Grot
           end
         else
           # It's a CLI command string
-          config_to_use = command_definition[:requires_config] ? @config : {}
+          config_to_use = requirements.include?(:config) ? @config : {}
           cmd = @command_builder.build_command(command_name, config_to_use)
           result = execute_cli_command(command_name, cmd)
         end
@@ -197,11 +198,13 @@ module Grot
     
     def validate_config(command_definition)
       # Basic validation - check required fields
-      if command_definition[:requires_fqbn] && !@config.dig(:basic, :fqbn)
+      requirements = command_definition[:requirements] || []
+      
+      if requirements.include?(:fqbn) && !@config.dig(:basic, :fqbn)
         raise Grot::Errors::ConfigurationError, "Board FQBN not specified in config"
       end
       
-      if command_definition[:requires_port] && !@config.dig(:basic, :port)
+      if requirements.include?(:port) && !@config.dig(:basic, :port)
         raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
       end
     end
@@ -216,7 +219,7 @@ module Grot
       begin
         # Get the command definition to check for configuration
         command_definition = Commands::CommandRegistry.get_command(command)
-        use_spinner = command_definition.key?(:spinner) ? command_definition[:spinner] : false
+        use_spinner = command_definition.key?(:spinner_message)
         real_time_output = command_definition.key?(:real_time_output) && command_definition[:real_time_output]
         
         # Use timeout to prevent hanging forever
@@ -240,11 +243,9 @@ module Grot
     def execute_with_spinner(command, cmd)
       command_def = Commands::CommandRegistry.get_command(command)
       spinner_message = command_def[:spinner_message] || "Running #{command}..."
-      spinner_type = command_def[:spinner_type] || :dots
-      spinner_color = command_def[:spinner_color] || :cyan
       
-      # Create and start spinner
-      spinner = CLI::ProgressDisplay::Spinner.new(spinner_message, spinner_type, spinner_color)
+      # Create and start spinner with pulse animation and blue color
+      spinner = CLI::ProgressDisplay::Spinner.new(spinner_message)
       spinner.start
       
       begin

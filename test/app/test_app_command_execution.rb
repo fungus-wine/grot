@@ -38,7 +38,6 @@ class TestAppCommandExecution < Minitest::Test
   def test_run_with_valid_command
     command_definition = {
       description: 'Test command',
-      requires_config: false,
       action: ->(_app) { 0 }
     }
     
@@ -52,7 +51,7 @@ class TestAppCommandExecution < Minitest::Test
   def test_run_with_config_command_success
     command_definition = {
       description: 'Test command with config',
-      requires_config: true,
+      requirements: [:config],
       action: ->(_app, _config) { 0 }
     }
     
@@ -72,7 +71,7 @@ class TestAppCommandExecution < Minitest::Test
   def test_run_with_config_command_no_config
     command_definition = {
       description: 'Test command with config',
-      requires_config: true,
+      requirements: [:config],
       action: ->(_app, _config) { 0 }
     }
     
@@ -91,7 +90,6 @@ class TestAppCommandExecution < Minitest::Test
   def test_run_with_error_command
     command_definition = {
       description: 'Error command',
-      requires_config: false,
       action: ->(_app) { raise Grot::Errors::CommandError, "Test error" }
     }
     

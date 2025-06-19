@@ -10,9 +10,7 @@ class TestCommandBuilder < Minitest::Test
     # Mock command definitions
     @command_registry.expects(:get_command).with('build').returns({
       action: 'compile',
-      requires_sketch_path: true,
-      requires_fqbn: true,
-      board_specific: true,
+      requirements: [:sketch_path, :fqbn],
       verbose: true
     })
     
@@ -31,9 +29,7 @@ class TestCommandBuilder < Minitest::Test
   def test_build_command_with_port
     @command_registry.expects(:get_command).with('monitor').returns({
       action: 'monitor',
-      requires_port: true,
-      requires_sketch_path: false,
-      board_specific: false,
+      requirements: [:port],
       verbose: false
     })
     

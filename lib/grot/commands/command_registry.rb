@@ -11,43 +11,34 @@ module Grot
         # Commands that don't require config
         "version" => {
           description: "Show version information",
-          requires_config: false,
           action: ->(app) { Commands::Handlers.version_command(app) }
         },
         "init" => {
           description: "Initialize a new configuration file",
-          requires_config: false,
           action: ->(app) { Commands::Handlers.init_command(app) }
         },
         "ports" => {
           description: "List available serial ports",
-          requires_config: false,
           action: ->(app) { Commands::Handlers.ports_command(app) }
         },
         "boards" => {
           description: "List supported boards",
-          requires_config: false,
           action: ->(app) { Commands::Handlers.boards_command(app) }
         },
         "clean" => {
           description: "Clean arduino-cli cache",
-          requires_config: true,
-          board_specific: false,
+          requirements: [:config],
           spinner_message: "Cleaning cache",
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: ->(app, config) { Commands::Handlers.clean_command(app, config) }
         },
         "dump" => {
           description: "Print out configuration info",
-          requires_config: false,
           action: ->(app) { Commands::Handlers.dump_command(app) }
         },
         "build" => {
           description: "Compile the sketch",
-          requires_config: true,
-          requires_fqbn: true,
-          requires_sketch_path: true,
-          board_specific: true,
+          requirements: [:config, :fqbn, :sketch_path],
           verbose: false,
           spinner_message: "Building sketch",
           pre_action: ->(app) { puts "Compiling code...\n" },
@@ -56,11 +47,7 @@ module Grot
         },
         "load" => {
           description: "Upload sketch to board",
-          requires_config: true,
-          requires_fqbn: true,
-          requires_port: true,
-          requires_sketch_path: true,
-          board_specific: true,
+          requirements: [:config, :fqbn, :port, :sketch_path],
           verbose: false,
           spinner_message: "Uploading to board",
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
@@ -68,16 +55,12 @@ module Grot
         },
         "monitor" => {
           description: "Open serial monitor",
-          requires_config: true,
-          requires_port: true,
-          board_specific: false,
+          requirements: [:config, :port],
           action: ->(app, config) { Commands::Handlers.monitor_command(app, config) }
         },
         "plotter" => {
           description: "Open serial plotter",
-          requires_config: true,
-          requires_port: true,
-          board_specific: false,
+          requirements: [:config, :port],
           action: ->(app, config) { Commands::Handlers.plotter_command(app, config) }
         }
       }.freeze

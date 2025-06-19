@@ -21,13 +21,15 @@ module Grot
         ]
         
         # Add sketch path if required (specified in command definition)
-        cmd_parts << config[:basic][:sketch_path] if command_definition[:requires_sketch_path]
+        requirements = command_definition[:requirements] || []
+        cmd_parts << config[:basic][:sketch_path] if requirements.include?(:sketch_path)
         
         # Add standard options
         cmd_parts = add_standard_options(cmd_parts, config, command_definition)
         
-        # Apply board-specific modifications if needed
-        if command_definition[:board_specific] && config[:basic][:fqbn]
+        # Apply board-specific modifications if needed (commands that require fqbn are board-specific)
+        requirements = command_definition[:requirements] || []
+        if requirements.include?(:fqbn) && config[:basic][:fqbn]
           board_strategy = Boards::BoardStrategyFactory.create_strategy(config)
           board_strategy.customize_board_command(cmd_parts, command)
         end
@@ -39,11 +41,13 @@ module Grot
       private
       
       def add_standard_options(cmd_parts, config, command_definition)
+        requirements = command_definition[:requirements] || []
+        
         # Add FQBN if required and specified in config
-        cmd_parts << "--fqbn #{config[:basic][:fqbn]}" if command_definition[:requires_fqbn] && config[:basic][:fqbn]
+        cmd_parts << "--fqbn #{config[:basic][:fqbn]}" if requirements.include?(:fqbn) && config[:basic][:fqbn]
         
         # Add port if required and specified in config
-        cmd_parts << "--port #{config[:basic][:port]}" if command_definition[:requires_port] && config[:basic][:port]
+        cmd_parts << "--port #{config[:basic][:port]}" if requirements.include?(:port) && config[:basic][:port]
         
         cmd_parts << "--verbose" if command_definition[:verbose]
 
