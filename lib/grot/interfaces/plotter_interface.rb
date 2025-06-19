@@ -4,6 +4,7 @@ require 'gosu'
 require 'grot/interfaces/base_interface'
 require 'grot/interfaces/components/command_bar'
 require 'grot/interfaces/components/help_dialog'
+require 'grot/interfaces/components/status_bar'
 require 'grot/interfaces/models/serial_connection'
 require 'grot/interfaces/models/serial_data_parser'
 require 'grot/interfaces/models/data_buffer_manager'
@@ -52,7 +53,11 @@ module Grot
           y_max: DEFAULT_Y_MAX,
           y_grid_lines: DEFAULT_Y_GRID_LINES,
           active_series: {},
-          series_visibility: {}
+          series_visibility: {},
+          data_rate: 0.0,
+          data_count: 0,
+          rate_window: [],
+          rate_stable: false
         }
         
         # Initialize state for the command bar
@@ -65,6 +70,7 @@ module Grot
         @command_bar = Components::CommandBar.new(self, @font, @theme_manager)
         @plotter = Components::PlotterComponent.new(self, @font, @theme_manager, @data_buffer)
         @help_dialog = Components::HelpDialog.new(self, @font, @theme_manager)
+        @status_bar = Components::StatusBar.new(self, @font, @theme_manager)
         
         # Set up help content
         setup_help_content
@@ -114,6 +120,9 @@ module Grot
         # Always update y-scale (autoscale always enabled)
         update_y_scale
         
+        # Update status bar
+        update_status_bar
+        
         # Update text input for command bar
         if @command_state[:active] && text_input.nil?
           self.text_input = Gosu::TextInput.new
@@ -133,6 +142,7 @@ module Grot
       
       def draw_interface
         @plotter.draw
+        @status_bar.draw
         @command_bar.draw
         @help_dialog.draw
       end
@@ -143,6 +153,10 @@ module Grot
         
         # Only continue if we actually got some parsed data
         return if parsed_data.empty?
+        
+        # Track data rate
+        current_time = Time.now
+        update_data_rate(parsed_data.size, current_time)
         
         # Add each parsed data point to the buffer
         parsed_data.each do |data_point|
@@ -182,6 +196,12 @@ module Grot
       
       def toggle_pause
         @plotter_state[:paused] = !@plotter_state[:paused]
+        # Clear rate calculation when unpausing to get fresh data
+        if !@plotter_state[:paused]
+          @plotter_state[:rate_window].clear
+          @plotter_state[:data_rate] = 0.0
+          @plotter_state[:rate_stable] = false
+        end
       end
       
       
@@ -266,6 +286,65 @@ module Grot
         end
 
         @command_state[:text] = ""
+      end
+
+      def update_status_bar
+        # Connection status
+        if @serial_connection&.connected
+          @status_bar.set_status("Port", @config.dig(:basic, :port) || "Unknown", @theme_manager.text_color)
+        else
+          @status_bar.set_status("Port", "Disconnected", Gosu::Color::RED)
+        end
+        
+        # Pause status
+        if @plotter_state[:paused]
+          @status_bar.set_status("Status", "Paused", Gosu::Color::YELLOW)
+        else
+          @status_bar.set_status("Status", "Active", @theme_manager.text_color)
+        end
+        
+        # Data rate - show -- when calculation is unstable
+        if @plotter_state[:rate_stable]
+          rate = @plotter_state[:data_rate]
+          rate_text = "#{rate.round(1)} Hz"
+        else
+          rate_text = "--"
+        end
+        @status_bar.set_status("Rate", rate_text, @theme_manager.text_color)
+      end
+      
+      def update_data_rate(data_points, current_time)
+        # Keep a rolling window of data timestamps for rate calculation
+        @plotter_state[:rate_window] << current_time
+        @plotter_state[:data_count] += data_points
+        
+        # Keep only last 10 seconds of data for rate calculation (longer window for stability)
+        cutoff_time = current_time - 10.0
+        @plotter_state[:rate_window].reject! { |time| time < cutoff_time }
+        
+        # Calculate rate based on data points in the last 10 seconds
+        if @plotter_state[:rate_window].size > 1
+          time_span = @plotter_state[:rate_window].last - @plotter_state[:rate_window].first
+          if time_span > 0
+            # Calculate data points per second
+            points_in_window = @plotter_state[:rate_window].size
+            new_rate = points_in_window / time_span
+            
+            # Apply exponential smoothing to reduce jitter (especially for low rates)
+            if @plotter_state[:rate_stable]
+              # Smooth the rate with previous value (85% old, 15% new for more smoothing)
+              @plotter_state[:data_rate] = @plotter_state[:data_rate] * 0.85 + new_rate * 0.15
+            else
+              @plotter_state[:data_rate] = new_rate
+            end
+            
+            # Mark as stable when we have at least 5 seconds of data and 3+ points
+            @plotter_state[:rate_stable] = time_span >= 5.0 && points_in_window >= 3
+          end
+        else
+          @plotter_state[:data_rate] = 0.0
+          @plotter_state[:rate_stable] = false
+        end
       end
 
       def calculate_data_range(stats)

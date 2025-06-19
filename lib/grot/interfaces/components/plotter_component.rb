@@ -2,6 +2,8 @@
 
 require 'gosu'
 require 'grot/interfaces/utils/drawing_kit'
+require 'grot/interfaces/components/status_bar'
+require 'grot/interfaces/components/command_bar'
 
 module Grot
   module Interfaces
@@ -63,12 +65,12 @@ module Grot
         def calculate_graph_area
           state = @interface.plotter_state
           
-          # Calculate available space for plotting
+          # Calculate available space for plotting (between status bar and command bar)
           {
             x: LEFT_MARGIN,
-            y: MARGIN,
+            y: MARGIN + StatusBar::HEIGHT,
             width: @interface.width - LEFT_MARGIN - MARGIN,
-            height: @interface.height - (MARGIN * 2) - CommandBar::HEIGHT
+            height: @interface.height - (MARGIN * 2) - StatusBar::HEIGHT - CommandBar::HEIGHT
           }
         end
         
