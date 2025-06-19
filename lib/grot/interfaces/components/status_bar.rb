@@ -10,7 +10,7 @@ module Grot
         
         # Visual styling constants
         TEXT_PADDING = 8
-        TEXT_SCALE = 0.8
+        TEXT_SCALE = 0.9
         ITEM_SPACING = 20
 
         def initialize(interface, font, theme_manager)
