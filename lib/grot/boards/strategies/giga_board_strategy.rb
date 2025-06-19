@@ -111,7 +111,7 @@ module Grot
           puts "Compiling GIGA R1 code before upload..."
           
           # Create and start spinner
-          spinner = CLI::ProgressDisplay::Spinner.new("Compiling for GIGA", :dots, :blue)
+          spinner = CLI::ProgressDisplay::Spinner.new("Compiling for GIGA", :blue)
           spinner.start
           
           begin

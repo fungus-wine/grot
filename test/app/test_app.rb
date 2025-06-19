@@ -39,10 +39,10 @@ class TestApp < Minitest::Test
   end
   
   def test_execute_cli_command_with_spinner
-    # Create command definition with spinner
+    # Create command definition with spinner_message
     command_definition = {
       description: 'Spinner command',
-      spinner: true
+      spinner_message: 'Running test...'
     }
     
     Grot::Commands::CommandRegistry.expects(:get_command)

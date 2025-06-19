@@ -9,25 +9,19 @@ module Grot
       class Spinner
         include Grot::CLI::Colorator
         
-        # Available spinner types
-        SPINNER_TYPES = {
-          dots: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'],
-          line: ['|', '/', '-', '\\'],
-          simple: ['.  ', '.. ', '...', ' ..', '  .', '   '],
-          pulse: ['█', '▓', '▒', '░']
-        }.freeze
+        # Animation frames
+        ANIMATION_FRAMES = ['█', '▓', '▒', '░'].freeze
         
-        attr_reader :message, :type, :color
+        attr_reader :message, :color
         
-        def initialize(message, type = :dots, color = :cyan)
+        def initialize(message, color = :cyan)
           @message = message
-          @type = type
           @color = color
-          @frames = SPINNER_TYPES[type] || SPINNER_TYPES[:dots]
+          @frames = ANIMATION_FRAMES
           @current_frame = 0
           @running = false
           @thread = nil
-          @interval = 0.1  # Default animation speed
+          @interval = 0.2  # Slower animation speed
         end
         
         def start

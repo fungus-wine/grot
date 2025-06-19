@@ -127,10 +127,7 @@ class TestAppCommandExecution < Minitest::Test
   def test_execute_cli_command_with_spinner
     command_definition = {
       description: 'Spinner command',
-      spinner: true,
-      spinner_message: "Running test...",
-      spinner_type: :dots,
-      spinner_color: :blue
+      spinner_message: "Running test..."
     }
     
     # Set up the mock spinner
@@ -141,7 +138,7 @@ class TestAppCommandExecution < Minitest::Test
       .with('spinner_command').returns(command_definition).at_least_once
       
     Grot::CLI::ProgressDisplay::Spinner.expects(:new)
-      .with("Running test...", :dots, :blue).returns(spinner)
+      .with("Running test...").returns(spinner)
       
     spinner.expects(:start)
     

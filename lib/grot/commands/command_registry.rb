@@ -33,10 +33,7 @@ module Grot
           description: "Clean arduino-cli cache",
           requires_config: true,
           board_specific: false,
-          spinner: true,
           spinner_message: "Cleaning cache",
-          spinner_type: :simple,
-          spinner_color: :blue,
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: ->(app, config) { Commands::Handlers.clean_command(app, config) }
         },
@@ -52,10 +49,7 @@ module Grot
           requires_sketch_path: true,
           board_specific: true,
           verbose: false,
-          spinner: true,
           spinner_message: "Building sketch",
-          spinner_type: :dots,
-          spinner_color: :green,
           pre_action: ->(app) { puts "Compiling code...\n" },
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: "compile"
@@ -68,10 +62,7 @@ module Grot
           requires_sketch_path: true,
           board_specific: true,
           verbose: false,
-          spinner: true,
           spinner_message: "Uploading to board",
-          spinner_type: :line,
-          spinner_color: :cyan,
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: "upload"
         },

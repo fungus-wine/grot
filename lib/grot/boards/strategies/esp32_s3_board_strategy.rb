@@ -115,7 +115,7 @@ module Grot
           puts "Compiling ESP32-S3 code before upload..."
           
           # Create and start spinner
-          spinner = CLI::ProgressDisplay::Spinner.new("Compiling for ESP32-S3", :dots, :green)
+          spinner = CLI::ProgressDisplay::Spinner.new("Compiling for ESP32-S3", :green)
           spinner.start
           
           begin
