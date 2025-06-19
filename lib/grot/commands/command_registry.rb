@@ -103,13 +103,6 @@ module Grot
           requires_port: true,
           board_specific: false,
           action: ->(app, config) { Commands::Handlers.plotter_command(app, config) }
-        },
-        "buggy" => {
-          description: "Open keyboard debugger",
-          requires_config: false,
-          requires_port: false,
-          board_specific: false,
-          action: ->(app) { Commands::Handlers.buggy_command(app) }
         }
       }.freeze
       
