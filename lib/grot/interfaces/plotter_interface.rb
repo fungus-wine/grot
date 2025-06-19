@@ -241,36 +241,13 @@ module Grot
       end
       
       def update_y_scale
-        # Get data statistics
         stats = @data_buffer.statistics
         return if stats.empty?
         
-        # Find min and max values across all series
-        min_values = stats.values.map { |s| s[:min] }
-        max_values = stats.values.map { |s| s[:max] }
+        data_min, data_max = calculate_data_range(stats)
+        padding = calculate_y_scale_padding(data_min, data_max)
         
-        # Calculate new min and max with some padding
-        data_min = min_values.min
-        data_max = max_values.max
-        
-        # Add padding for better visualization
-        range = data_max - data_min
-        padding = [range * Y_SCALE_PADDING_RATIO, MIN_Y_SCALE_PADDING].max
-        
-        # Update if values have changed significantly
-        if (@plotter_state[:y_min].nil? || @plotter_state[:y_max].nil? || 
-          (data_min - padding < @plotter_state[:y_min]) || 
-          (data_max + padding > @plotter_state[:y_max]))
-          
-          @plotter_state[:y_min] = data_min - padding
-          @plotter_state[:y_max] = data_max + padding
-          
-          # If values are too close together, add more padding
-          if (@plotter_state[:y_max] - @plotter_state[:y_min]).abs < MIN_Y_RANGE
-            @plotter_state[:y_min] -= Y_RANGE_FALLBACK
-            @plotter_state[:y_max] += Y_RANGE_FALLBACK
-          end
-        end
+        update_y_scale_if_needed(data_min, data_max, padding)
       end
       
       def process_command(command)
@@ -292,6 +269,38 @@ module Grot
         @command_state[:text] = ""
       end
 
+      def calculate_data_range(stats)
+        min_values = stats.values.map { |s| s[:min] }
+        max_values = stats.values.map { |s| s[:max] }
+        [min_values.min, max_values.max]
+      end
+      
+      def calculate_y_scale_padding(data_min, data_max)
+        range = data_max - data_min
+        [range * Y_SCALE_PADDING_RATIO, MIN_Y_SCALE_PADDING].max
+      end
+      
+      def update_y_scale_if_needed(data_min, data_max, padding)
+        needs_update = @plotter_state[:y_min].nil? || @plotter_state[:y_max].nil? ||
+                       (data_min - padding < @plotter_state[:y_min]) ||
+                       (data_max + padding > @plotter_state[:y_max])
+        
+        return unless needs_update
+        
+        @plotter_state[:y_min] = data_min - padding
+        @plotter_state[:y_max] = data_max + padding
+        
+        ensure_minimum_y_range
+      end
+      
+      def ensure_minimum_y_range
+        current_range = (@plotter_state[:y_max] - @plotter_state[:y_min]).abs
+        return unless current_range < MIN_Y_RANGE
+        
+        @plotter_state[:y_min] -= Y_RANGE_FALLBACK
+        @plotter_state[:y_max] += Y_RANGE_FALLBACK
+      end
+      
       def connect_serial
         # Get baud rate from config or registry defaults
         baud_rate = @config[:baud_rate] || 

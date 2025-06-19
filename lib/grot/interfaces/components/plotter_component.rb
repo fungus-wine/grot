@@ -25,6 +25,19 @@ module Grot
         LEGEND_BORDER_RADIUS = 8
         LEGEND_PADDING = 10
         
+        # Color constants
+        LEGEND_BACKGROUND_COLOR = Gosu::Color.rgba(45, 45, 48, 240)
+        LEGEND_BORDER_COLOR = Gosu::Color.rgba(80, 80, 80, 180)
+        LEGEND_TEXT_VISIBLE_COLOR = Gosu::Color.rgba(212, 212, 212, 255)
+        LEGEND_TEXT_HIDDEN_COLOR = Gosu::Color.rgba(120, 120, 120, 255)
+        LEGEND_NUMBER_VISIBLE_COLOR = Gosu::Color.rgba(130, 130, 130, 255)
+        LEGEND_NUMBER_HIDDEN_COLOR = Gosu::Color.rgba(80, 80, 80, 255)
+        LEGEND_OVERFLOW_COLOR = Gosu::Color.rgba(160, 160, 160, 255)
+        GRAPH_BACKGROUND_COLOR = Gosu::Color.rgba(35, 35, 38, 255)
+        
+        # Alpha values for transparency effects
+        HIDDEN_SERIES_ALPHA = 100
+        
         def initialize(interface, font, theme_manager, data_buffer)
           @interface = interface
           @font = font
@@ -60,14 +73,12 @@ module Grot
         end
         
         def draw_graph_background(graph_area)
-          # Graph area with slightly different tone - flat, no 3D effect
-          graph_bg = Gosu::Color.rgba(35, 35, 38, 255)  # Slightly lighter than main bg
           Gosu.draw_rect(
             graph_area[:x], 
             graph_area[:y], 
             graph_area[:width], 
             graph_area[:height], 
-            graph_bg
+            GRAPH_BACKGROUND_COLOR
           )
         end
         
@@ -202,97 +213,98 @@ module Grot
           active_series = state[:active_series]
           return if active_series.empty?
           
-          # Position legend
-          legend_x = graph_area[:x] + graph_area[:width] - LEGEND_WIDTH
-          legend_y = graph_area[:y] + LEGEND_EXTRA_HEIGHT
+          legend_position = calculate_legend_position(graph_area)
+          legend_height = calculate_legend_height(active_series)
           
-          # Modern semi-transparent dark background with subtle border
-          background_color = Gosu::Color.rgba(45, 45, 48, 240)  # VS Code-inspired dark
-          
-          # Calculate height based on content
+          draw_legend_background(legend_position, legend_height)
+          draw_legend_entries(active_series, legend_position)
+          draw_series_overflow_indicator(active_series, legend_position) if active_series.size > LEGEND_MAX_VISIBLE_SERIES
+        end
+
+        private
+
+        def calculate_legend_position(graph_area)
+          {
+            x: graph_area[:x] + graph_area[:width] - LEGEND_WIDTH,
+            y: graph_area[:y] + LEGEND_EXTRA_HEIGHT
+          }
+        end
+
+        def calculate_legend_height(active_series)
           series_count = active_series.size.clamp(1, LEGEND_MAX_VISIBLE_SERIES)
-          legend_height = (series_count * LEGEND_ENTRY_HEIGHT)
-          legend_height += LEGEND_EXTRA_HEIGHT if active_series.size > LEGEND_MAX_VISIBLE_SERIES # Add space for "...more" text
-          
-          # Draw legend background with modern styling
+          legend_height = series_count * LEGEND_ENTRY_HEIGHT
+          legend_height += LEGEND_EXTRA_HEIGHT if active_series.size > LEGEND_MAX_VISIBLE_SERIES
+          legend_height
+        end
+
+        def draw_legend_background(position, height)
+          # Background
           draw_rounded_rect(
-            legend_x - LEGEND_PADDING,
-            legend_y - LEGEND_PADDING,
+            position[:x] - LEGEND_PADDING,
+            position[:y] - LEGEND_PADDING,
             LEGEND_WIDTH,
-            legend_height + LEGEND_PADDING,
-            background_color,
+            height + LEGEND_PADDING,
+            LEGEND_BACKGROUND_COLOR,
             LEGEND_BORDER_RADIUS,
             3
           )
           
-          # Add subtle border for modern look
-          border_color = Gosu::Color.rgba(80, 80, 80, 180)
+          # Border
           draw_rounded_rect_outline(
-            legend_x - LEGEND_PADDING,
-            legend_y - LEGEND_PADDING,
+            position[:x] - LEGEND_PADDING,
+            position[:y] - LEGEND_PADDING,
             LEGEND_WIDTH,
-            legend_height + LEGEND_PADDING,
-            border_color,
+            height + LEGEND_PADDING,
+            LEGEND_BORDER_COLOR,
             LEGEND_BORDER_RADIUS,
             3
           )
-          
-          # Draw entries with number keys
+        end
+
+        def draw_legend_entries(active_series, position)
           active_series.first(LEGEND_MAX_VISIBLE_SERIES).each_with_index do |(name, info), i|
-            y_pos = legend_y + (i * LEGEND_ENTRY_HEIGHT)
+            y_pos = position[:y] + (i * LEGEND_ENTRY_HEIGHT)
             
-            # Color swatch - use dimmed color if hidden
-            swatch_color = info[:visible] ? info[:color] : 
-                          Gosu::Color.rgba(info[:color].red, info[:color].green, info[:color].blue, 100)
-            
-            draw_circle(
-              legend_x + 10,
-              y_pos + 6,
-              7,
-              swatch_color,
-              4
-            )
-            
-            # Draw number key indicator with modern styling
-            key_number = i + 1
-            key_color = info[:visible] ? Gosu::Color.rgba(130, 130, 130, 255) : Gosu::Color.rgba(80, 80, 80, 255)
-            @font.draw_text(
-              "#{key_number}",
-              legend_x + 25,
-              y_pos,
-              5,
-              0.8,
-              0.8,
-              key_color
-            )
-            
-            # Draw name with modern text hierarchy
-            text_color = info[:visible] ? Gosu::Color.rgba(212, 212, 212, 255) : Gosu::Color.rgba(120, 120, 120, 255)
-            @font.draw_text(
-              name.to_s,
-              legend_x + 40,
-              y_pos,
-              5,
-              1.0,
-              1.0,
-              text_color
-            )
-          end
-          
-          # Draw count if more series than active
-          if active_series.size > LEGEND_MAX_VISIBLE_SERIES
-            y_pos = legend_y + (LEGEND_MAX_VISIBLE_SERIES * LEGEND_ENTRY_HEIGHT)
-            @font.draw_text(
-              "... #{active_series.size - LEGEND_MAX_VISIBLE_SERIES} more",
-              legend_x + 40,
-              y_pos,
-              5,
-              0.8,
-              0.8,
-              Gosu::Color.rgba(160, 160, 160, 255)
-            )
+            draw_legend_entry_swatch(info, position[:x], y_pos)
+            draw_legend_entry_number(i + 1, info[:visible], position[:x], y_pos)
+            draw_legend_entry_name(name, info[:visible], position[:x], y_pos)
           end
         end
+
+        def draw_legend_entry_swatch(info, x, y)
+          swatch_color = info[:visible] ? info[:color] : create_transparent_color(info[:color], HIDDEN_SERIES_ALPHA)
+          draw_circle(x + 10, y + 6, 7, swatch_color, 4)
+        end
+
+        def draw_legend_entry_number(number, visible, x, y)
+          key_color = visible ? LEGEND_NUMBER_VISIBLE_COLOR : LEGEND_NUMBER_HIDDEN_COLOR
+          @font.draw_text("#{number}", x + 25, y, 5, 0.8, 0.8, key_color)
+        end
+
+        def draw_legend_entry_name(name, visible, x, y)
+          text_color = visible ? LEGEND_TEXT_VISIBLE_COLOR : LEGEND_TEXT_HIDDEN_COLOR
+          @font.draw_text(name.to_s, x + 40, y, 5, 1.0, 1.0, text_color)
+        end
+
+        def draw_series_overflow_indicator(active_series, position)
+          y_pos = position[:y] + (LEGEND_MAX_VISIBLE_SERIES * LEGEND_ENTRY_HEIGHT)
+          overflow_count = active_series.size - LEGEND_MAX_VISIBLE_SERIES
+          @font.draw_text(
+            "... #{overflow_count} more",
+            position[:x] + 40,
+            y_pos,
+            5,
+            0.8,
+            0.8,
+            LEGEND_OVERFLOW_COLOR
+          )
+        end
+        
+        def create_transparent_color(color, alpha)
+          Gosu::Color.rgba(color.red, color.green, color.blue, alpha)
+        end
+
+        public
         
         def draw_time_scale_label(graph_area)
           # Get data from buffer to calculate time range
@@ -352,51 +364,60 @@ module Grot
         def calculate_smart_grid_values(state)
           y_min = state[:y_min]
           y_max = state[:y_max]
-          target_lines = state[:y_grid_lines] + 1 # Usually 6 lines
+          target_lines = state[:y_grid_lines] + 1
           
-          # Check if zero should be included
+          if should_include_zero_line?(y_min, y_max)
+            calculate_zero_based_grid_values(y_min, y_max, target_lines)
+          else
+            calculate_standard_grid_values(y_min, y_max, target_lines)
+          end
+        end
+        
+        def should_include_zero_line?(y_min, y_max)
           range = y_max - y_min
           zero_distance_from_center = [(0 - y_min).abs, (0 - y_max).abs].min
           
-          # Include zero if it's within the range or close to it (within 20% of range)
-          include_zero = (y_min <= 0 && y_max >= 0) || zero_distance_from_center <= range * 0.2
-          
-          if include_zero
-            # Build grid with zero line
-            if y_min >= 0
-              # All positive values, start from 0
-              step = (y_max - 0) / (target_lines - 1)
-              step = round_to_nice_step(step)
-              (0...target_lines).map { |i| 0 + i * step }
-            elsif y_max <= 0
-              # All negative values, end at 0
-              step = (0 - y_min) / (target_lines - 1)
-              step = round_to_nice_step(step)
-              (0...target_lines).map { |i| 0 - (target_lines - 1 - i) * step }
-            else
-              # Spans zero, make zero one of the lines
-              positive_lines = (target_lines / 2.0).ceil
-              negative_lines = target_lines - positive_lines
-              
-              pos_step = round_to_nice_step(y_max / positive_lines)
-              neg_step = round_to_nice_step(-y_min / negative_lines)
-              
-              values = []
-              # Negative values
-              (1..negative_lines).each { |i| values << -i * neg_step }
-              # Zero
-              values << 0
-              # Positive values  
-              (1...positive_lines).each { |i| values << i * pos_step }
-              
-              values.sort
-            end
+          (y_min <= 0 && y_max >= 0) || zero_distance_from_center <= range * 0.2
+        end
+        
+        def calculate_zero_based_grid_values(y_min, y_max, target_lines)
+          if y_min >= 0
+            calculate_positive_only_grid(y_max, target_lines)
+          elsif y_max <= 0
+            calculate_negative_only_grid(y_min, target_lines)
           else
-            # Standard even spacing without zero
-            step = (y_max - y_min) / (target_lines - 1)
-            step = round_to_nice_step(step)
-            (0...target_lines).map { |i| y_min + i * step }
+            calculate_spanning_zero_grid(y_min, y_max, target_lines)
           end
+        end
+        
+        def calculate_positive_only_grid(y_max, target_lines)
+          step = round_to_nice_step(y_max / (target_lines - 1))
+          (0...target_lines).map { |i| i * step }
+        end
+        
+        def calculate_negative_only_grid(y_min, target_lines)
+          step = round_to_nice_step(-y_min / (target_lines - 1))
+          (0...target_lines).map { |i| -(target_lines - 1 - i) * step }
+        end
+        
+        def calculate_spanning_zero_grid(y_min, y_max, target_lines)
+          positive_lines = (target_lines / 2.0).ceil
+          negative_lines = target_lines - positive_lines
+          
+          pos_step = round_to_nice_step(y_max / positive_lines)
+          neg_step = round_to_nice_step(-y_min / negative_lines)
+          
+          values = []
+          (1..negative_lines).each { |i| values << -i * neg_step }
+          values << 0
+          (1...positive_lines).each { |i| values << i * pos_step }
+          
+          values.sort
+        end
+        
+        def calculate_standard_grid_values(y_min, y_max, target_lines)
+          step = round_to_nice_step((y_max - y_min) / (target_lines - 1))
+          (0...target_lines).map { |i| y_min + i * step }
         end
         
         def round_to_nice_step(step)
