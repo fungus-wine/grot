@@ -12,9 +12,11 @@ require 'grot/errors'
 module Grot
   module Interfaces
     class BaseInterface < Gosu::Window
-      DEFAULT_FONT_SIZE = 16
-      DEFAULT_WINDOW_WIDTH = 800
-      DEFAULT_WINDOW_HEIGHT = 600
+      # Interface constants
+      FONT_NAME = "InconsolataNerdFont-Regular"
+      FONT_SIZE = 16
+      WINDOW_WIDTH = 800
+      WINDOW_HEIGHT = 600
       MIN_WINDOW_WIDTH = 400
       MIN_WINDOW_HEIGHT = 300
 
@@ -26,20 +28,13 @@ module Grot
         # Apply registry defaults to config if needed
         apply_registry_defaults
         
-        # Get window dimensions from config
-        window_width = @config.dig(:interface, :window_width) || DEFAULT_WINDOW_WIDTH
-        window_height = @config.dig(:interface, :window_height) || DEFAULT_WINDOW_HEIGHT
-        
-        super(window_width, window_height, false)
+        super(WINDOW_WIDTH, WINDOW_HEIGHT, false)
         self.caption = "Grot Interface"
 
         # Setup theme manager and font
         @theme_manager = Utils::ThemeManager.new
         
-        # Get font settings from config
-        font_name = @config.dig(:interface, :font) || Utils::FontLoader::DEFAULT_FONT_NAME
-        font_size = @config.dig(:interface, :font_size) || DEFAULT_FONT_SIZE
-        @font = Utils::FontLoader.load_font(font_name, font_size) 
+        @font = Utils::FontLoader.load_font(FONT_NAME, FONT_SIZE) 
 
         # Initialize serial connection    
         initialize_serial

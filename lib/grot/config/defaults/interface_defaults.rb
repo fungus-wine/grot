@@ -24,37 +24,6 @@ module Grot
 
         # These settings apply to both monitor and plotter        
         def self.load_common_interface_config(registry)
-          registry.add_option(
-            :interface,
-            :font,
-            :string,
-            "InconsolataNerdFont-Regular",
-            "Font name for interface windows"
-          )
-          
-          registry.add_option(
-            :interface,
-            :font_size,
-            :integer,
-            16,
-            "Font size in pixels"
-          )
-          
-          registry.add_option(
-            :interface,
-            :window_width,
-            :integer,
-            800,
-            "Initial window width in pixels"
-          )
-          
-          registry.add_option(
-            :interface,
-            :window_height,
-            :integer,
-            600,
-            "Initial window height in pixels"
-          )
           
           registry.add_option(
             :interface,
