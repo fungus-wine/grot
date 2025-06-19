@@ -63,9 +63,8 @@ class TestAppCommandExecution < Minitest::Test
       .with('config_command').returns(command_definition)
     
     File.expects(:exist?).with('test_config.toml').returns(true)
-    @app.instance_variable_get(:@config_manager).expects(:load_config)
-      .returns({:cli_path => 'arduino-cli'})
-    @app.instance_variable_get(:@config_manager).expects(:validate_config)
+    Grot::Config::ConfigManager.expects(:load_config)
+      .with('test_config.toml').returns({:cli_path => 'arduino-cli'})
     
     assert_equal 0, @app.run
   end

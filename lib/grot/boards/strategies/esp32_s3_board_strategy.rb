@@ -3,7 +3,6 @@
 require "grot/boards/strategies/base_board_strategy"
 require "grot/boards/board_registry"
 require "grot/cli/progress_display"
-require "grot/config/config_registry"
 require "grot/errors"
 require "open3"
 
@@ -44,19 +43,11 @@ module Grot
         end
         
         def generate_config_options
-          # Get options from registry if available
-          registry = Grot::Config::ConfigRegistry.instance
-          registry_defaults = registry.get_category_defaults(:esp32_options)
-          
-          # Fall back to board registry or hardcoded defaults if needed
-          if registry_defaults.empty?
-            return BoardRegistry.config_options_for(config[:fqbn]) || {
-              :core_config => 'dual',
-              :frequency => 240
-            }
-          end
-          
-          registry_defaults
+          # Return default config options for ESP32-S3 board
+          {
+            core_config: 'dual',
+            frequency: 240
+          }
         end
         
         def write_config_section(file)
@@ -75,24 +66,12 @@ module Grot
         
         # Documentation for ESP32-S3 configuration options
         def configuration_docs
-          # Try to get docs from registry first
-          registry = Grot::Config::ConfigRegistry.instance
-          if registry && registry[:esp32_options]
-            return {
-              :esp32_options => {
-                :description => registry[:esp32_options].description || "ESP32-S3 boards",
-                'options' => registry[:esp32_options].options.transform_values(&:description)
-              }
-            }
-          end
-          
-          # Fall back to hardcoded docs
           {
-            :esp32_options => {
-              :description => 'ESP32-S3 boards',
-              'options' => {
-                :core_config => 'How to use cores (dual, single-0, single-1)',
-                :frequency => 'CPU frequency in MHz (80, 160, 240)'
+            esp32_options: {
+              description: 'ESP32-S3 boards',
+              options: {
+                core_config: 'How to use cores (dual, single-0, single-1)',
+                frequency: 'CPU frequency in MHz (80, 160, 240)'
               }
             }
           }
@@ -101,9 +80,6 @@ module Grot
         private
         
         def validate_esp32_s3_options
-          # Get registry for validation
-          registry = Grot::Config::ConfigRegistry.instance
-          
           # Validate core_config
           core_config = get_config_option(:esp32_options, :core_config)
           if core_config && !VALID_CORE_CONFIGS.include?(core_config)
@@ -174,26 +150,13 @@ module Grot
         end
         
         def add_esp32_s3_build_properties(cmd_parts)
-          # Get options from registry if available
-          registry = Grot::Config::ConfigRegistry.instance
+          # Get config options with fallbacks to defaults
+          core_config = get_config_option(:esp32_options, :core_config) || 'dual'
+          frequency = get_config_option(:esp32_options, :frequency) || 240
           
-          # Get core_config (from config, registry, or default)
-          core_config = get_config_option(:esp32_options, :core_config)
-          core_config ||= registry.get_value({}, :esp32_options, :core_config, 'dual')
-          
-          # Add to command if available
-          if core_config
-            cmd_parts << "--build-property esp32.cores=#{core_config}"
-          end
-          
-          # Get frequency (from config, registry, or default)
-          frequency = get_config_option(:esp32_options, :frequency)
-          frequency ||= registry.get_value({}, :esp32_options, :frequency, 240)
-          
-          # Add to command if available
-          if frequency
-            cmd_parts << "--build-property esp32.frequency=#{frequency}"
-          end
+          # Add build properties to command
+          cmd_parts << "--build-property esp32.cores=#{core_config}"
+          cmd_parts << "--build-property esp32.frequency=#{frequency}"
         end
       end
     end

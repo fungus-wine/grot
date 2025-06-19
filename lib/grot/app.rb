@@ -9,7 +9,6 @@ require "grot/commands/command_registry"
 require "grot/commands/command_builder"
 require "grot/commands/command_handlers"
 require "grot/config/config_manager"
-require "grot/config/config_registry"
 require "grot/ports/port_handler"
 require "grot/boards/board_registry"
 require "grot/boards/board_strategy_factory"
@@ -93,12 +92,8 @@ module Grot
     
     def initialize_components
       @cli_parser = CLI::CLIParser.new(@options)
-      @config_manager = Config::ConfigManager.new
       @command_builder = Commands::CommandBuilder.new
       @port_handler = Ports::PortHandler.new
-      
-      # Initialize default config registry if it hasn't been initialized yet
-      Config::ConfigRegistry.init_defaults if Config::ConfigRegistry.instance.categories.empty?
     end
     
     def parse_options
@@ -184,7 +179,7 @@ module Grot
     def load_config_successfully?
       if File.exist?(@options[:config_file])
         begin
-          @config = @config_manager.load_config(@options[:config_file])
+          @config = Grot::Config::ConfigManager.load_config(@options[:config_file])
           return true
         rescue TomlRB::ParseError => e
           error "Error parsing config file: #{e.message}"
@@ -201,7 +196,14 @@ module Grot
     end
     
     def validate_config(command_definition)
-      @config_manager.validate_config(@config, command_definition)
+      # Basic validation - check required fields
+      if command_definition[:requires_fqbn] && !@config.dig(:basic, :fqbn)
+        raise Grot::Errors::ConfigurationError, "Board FQBN not specified in config"
+      end
+      
+      if command_definition[:requires_port] && !@config.dig(:basic, :port)
+        raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
+      end
     end
     
     # Command execution methods

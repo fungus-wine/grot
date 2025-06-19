@@ -1,25 +1,17 @@
 require 'grot/keyboard/module_provider'
 require 'grot/keyboard/modules/key_state_module'
-require 'grot/config/config_registry'
 
 Grot::Keyboard::ModuleProvider.register(
   :key_state,
   Grot::Keyboard::Modules::KeyState,
   90
 ) do |config|
-  # Get module-specific config
-  module_config = config[:module_config] || {}
+  # Get module-specific config with defaults
+  keyboard_config = config[:keyboard_key_state] || {}
   
-  # Get registry instance
-  registry = Grot::Config::ConfigRegistry.instance
-  
-  # Get values with registry fallbacks
-  enabled = registry.get_value(module_config, :keyboard_key_state, :enabled, true)
-  priority = registry.get_value(module_config, :keyboard_key_state, :priority, 90)
-  
-  # Return configuration hash
+  # Return configuration hash with defaults
   {
-    enabled: enabled,
-    priority: priority
+    enabled: keyboard_config[:enabled] != false, # Default to true
+    priority: keyboard_config[:priority] || 90
   }
 end

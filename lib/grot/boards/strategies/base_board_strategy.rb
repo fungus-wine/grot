@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "grot/config/config_registry"
 
 module Grot
   module Boards
@@ -56,24 +55,12 @@ module Grot
         # Get documentation for this strategy's configuration options
         # Returns a hash with option names as keys and documentation strings as values
         def configuration_docs
-          # Try to get docs from registry first
-          registry = Grot::Config::ConfigRegistry.instance
           strategy_name = self.class.name.gsub(/.*::/, '').gsub(/Strategy$/, '').downcase
           
-          # Look for a registry category matching the strategy name
-          category_name = "#{strategy_name}_options".to_sym
-          
-          if registry && registry[category_name]
-            return {
-              category_name.to_s => {
-                :description => registry[category_name].description || strategy_name,
-                'options' => registry[category_name].options.transform_values(&:description)
-              }
-            }
-          end
-          
-          # Fallback to empty hash
-          {}
+          # Return basic config options for this strategy
+          {
+            strategy_name => generate_config_options
+          }
         end
         
         protected

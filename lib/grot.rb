@@ -5,15 +5,7 @@ require "grot/errors"
 require "grot/debug"
 
 # Config system
-require "grot/config/config_option"
-require "grot/config/config_category"
-require "grot/config/config_registry"
-
-# Load all configuration defaults
-require "grot/config/defaults/board_defaults"
-require "grot/config/defaults/keyboard_defaults"
-require "grot/config/defaults/interface_defaults"
-
+require "grot/config/defaults"
 require "grot/config/config_manager"
 
 # Board-related requires

@@ -3,7 +3,6 @@
 require "grot/boards/strategies/base_board_strategy"
 require "grot/boards/board_registry"
 require "grot/cli/progress_display"
-require "grot/config/config_registry"
 require "grot/errors"
 require "open3"
 
@@ -41,19 +40,11 @@ module Grot
         end
         
         def generate_config_options
-          # Get options from registry if available
-          registry = Grot::Config::ConfigRegistry.instance
-          registry_defaults = registry.get_category_defaults(:giga_options)
-          
-          # Fall back to board registry or hardcoded defaults if needed
-          if registry_defaults.empty?
-            return BoardRegistry.config_options_for(config[:fqbn]) || {
-              :target_core => 'CM7',
-              :flash_split => 0.5
-            }
-          end
-          
-          registry_defaults
+          # Return default config options for GIGA board
+          {
+            target_core: 'CM7',
+            flash_split: 0.5
+          }
         end
         
         def write_config_section(file)
@@ -72,24 +63,12 @@ module Grot
         
         # Documentation for GIGA board configuration options
         def configuration_docs
-          # Try to get docs from registry first
-          registry = Grot::Config::ConfigRegistry.instance
-          if registry && registry[:giga_options]
-            return {
-              :giga_options => {
-                :description => registry[:giga_options].description || "GIGA R1 WiFi boards",
-                'options' => registry[:giga_options].options.transform_values(&:description)
-              }
-            }
-          end
-          
-          # Fall back to hardcoded docs
           {
-            :giga_options => {
-              :description => 'GIGA R1 WiFi boards',
-              'options' => {
-                :target_core => 'Target processor core (CM4 or CM7)',
-                :flash_split => 'Memory allocation between cores (0.0 - 1.0) This is the fraction available to the M7 core'
+            giga_options: {
+              description: 'GIGA R1 WiFi boards',
+              options: {
+                target_core: 'Target processor core (CM4 or CM7)',
+                flash_split: 'Memory allocation between cores (0.0 - 1.0) This is the fraction available to the M7 core'
               }
             }
           }
@@ -98,12 +77,7 @@ module Grot
         private
         
         def validate_target_core
-          # Get registry for validation
-          registry = Grot::Config::ConfigRegistry.instance
-          
-          # Get target_core with fallbacks
           target_core = get_config_option(:giga_options, :target_core)
-          target_core ||= registry.get_value({}, :giga_options, :target_core, nil)
           
           unless target_core && ['CM4', 'CM7'].include?(target_core)
             raise Grot::Errors::BoardStrategyError, "For GIGA R1 WiFi, target_core must be either 'CM4' or 'CM7'"
@@ -111,12 +85,7 @@ module Grot
         end
         
         def validate_flash_split
-          # Get registry for validation
-          registry = Grot::Config::ConfigRegistry.instance
-          
-          # Get flash_split with fallbacks
           flash_split = get_config_option(:giga_options, :flash_split)
-          flash_split ||= registry.get_value({}, :giga_options, :flash_split, nil)
           
           unless flash_split && flash_split.to_f >= 0.0 && flash_split.to_f <= 1.0
             raise Grot::Errors::BoardStrategyError, "For GIGA R1 WiFi, flash_split must be specified (0.0 - 1.0)"
@@ -177,26 +146,17 @@ module Grot
         end
 
         def add_giga_build_properties(cmd_parts)
-          # Get registry for fallbacks
-          registry = Grot::Config::ConfigRegistry.instance
+          # Get target_core with fallback to default
+          target_core = get_config_option(:giga_options, :target_core) || 'CM7'
           
-          # Get target_core with fallbacks (config > registry > default)
-          target_core = get_config_option(:giga_options, :target_core)
-          target_core ||= registry.get_value({}, :giga_options, :target_core, 'CM7')
+          # Add to command
+          cmd_parts << "--build-property build.core.#{target_core}=true"
           
-          # Add to command if available
-          if target_core
-            cmd_parts << "--build-property build.core.#{target_core}=true"
-          end
+          # Get flash_split with fallback to default
+          flash_split = get_config_option(:giga_options, :flash_split) || 0.5
           
-          # Get flash_split with fallbacks (config > registry > default)
-          flash_split = get_config_option(:giga_options, :flash_split)
-          flash_split ||= registry.get_value({}, :giga_options, :flash_split, 0.5)
-          
-          # Add to command if available
-          if flash_split
-            cmd_parts << "--build-property build.flash.split=#{flash_split}"
-          end
+          # Add to command
+          cmd_parts << "--build-property build.flash.split=#{flash_split}"
         end
       end
     end

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'rubyserial'
-require 'grot/config/config_registry'
 
 module Grot
   module Interfaces
@@ -14,12 +13,8 @@ module Grot
         def initialize(port, baud_rate = nil)
           @port_name = port
           
-          # Get registry instance
-          registry = Grot::Config::ConfigRegistry.instance
-          
-          # Get baud rate from param, registry, or default
-          @baud_rate = baud_rate || 
-                      registry.get_value({}, :interface, :baud_rate, DEFAULT_BAUD_RATE)
+          # Get baud rate from param or default
+          @baud_rate = baud_rate || DEFAULT_BAUD_RATE
           
           @connected = false
           @connection = nil

@@ -27,9 +27,7 @@ class TestCommandHandlers < Minitest::Test
     app = mock('app')
     app.expects(:options).returns({config_file: config_file})
     
-    config_manager = mock('config_manager')
-    Grot::Config::ConfigManager.expects(:new).returns(config_manager)
-    config_manager.expects(:create_default_config).with(config_file)
+    Grot::Config::ConfigManager.expects(:create_default_config).with(config_file)
     
     File.expects(:exist?).with(config_file).returns(false)
     
@@ -46,9 +44,7 @@ class TestCommandHandlers < Minitest::Test
     app = mock('app')
     app.expects(:options).returns({config_file: config_file})
     
-    config_manager = mock('config_manager')
-    Grot::Config::ConfigManager.expects(:new).returns(config_manager)
-    config_manager.expects(:create_default_config).with(config_file)
+    Grot::Config::ConfigManager.expects(:create_default_config).with(config_file)
     
     File.expects(:exist?).with(config_file).returns(true)
     
@@ -96,13 +92,10 @@ class TestCommandHandlers < Minitest::Test
     app.expects(:options).returns({config_file: config_file})
     app.expects(:port_handler).returns(port_handler)
     
-    config_manager = mock('config_manager')
     config = {:cli_path => 'test.ino'}
     
-    Grot::Config::ConfigManager.expects(:new).returns(config_manager)
     File.expects(:exist?).with(config_file).returns(true)
-    config_manager.expects(:load_config).returns(config)
-    config_manager.expects(:print_config).with(config)
+    Grot::Config::ConfigManager.expects(:load_config).with(config_file).returns(config)
     port_handler.expects(:list_available_ports)
     
     output = capture_stdout do

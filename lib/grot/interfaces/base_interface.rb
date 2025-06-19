@@ -4,7 +4,6 @@ require 'gosu'
 require 'rubyserial'
 require 'grot/keyboard/keyboard_manager'
 require 'grot/config/config_manager'
-require 'grot/config/config_registry'
 require 'grot/interfaces/utils/theme_manager'
 require 'grot/interfaces/utils/font_loader'
 require 'grot/errors'
@@ -25,8 +24,6 @@ module Grot
       def initialize(config)
         @config = config
         
-        # Apply registry defaults to config if needed
-        apply_registry_defaults
         
         super(WINDOW_WIDTH, WINDOW_HEIGHT, false)
         self.caption = "Grot Interface"
@@ -43,53 +40,6 @@ module Grot
         initialize_keyboard
       end
       
-      # Apply registry defaults to config if available
-      def apply_registry_defaults
-        registry = Grot::Config::ConfigRegistry.instance
-        
-        # Ensure interface section exists
-        @config[:interface] ||= {}
-        
-        # Apply interface defaults from registry if available
-        if registry && registry[:interface]
-          interface_defaults = registry[:interface].defaults
-          interface_defaults.each do |key, value|
-            @config[:interface][key] ||= value
-          end
-        end
-        
-        # Ensure monitor section exists
-        @config[:monitor] ||= {}
-        
-        # Apply monitor defaults from registry if available
-        if registry && registry[:monitor]
-          monitor_defaults = registry[:monitor].defaults
-          monitor_defaults.each do |key, value|
-            @config[:monitor][key] ||= value
-          end
-        end
-        
-        # Ensure plotter section exists
-        @config[:plotter] ||= {}
-        
-        # Apply plotter defaults from registry if available
-        if registry && registry[:plotter]
-          plotter_defaults = registry[:plotter].defaults
-          plotter_defaults.each do |key, value|
-            @config[:plotter][key] ||= value
-          end
-        end
-        
-        
-        # Apply keyboard defaults if available
-        @config[:keyboard] ||= {}
-        if registry && registry[:keyboard]
-          keyboard_defaults = registry[:keyboard].defaults
-          keyboard_defaults.each do |key, value|
-            @config[:keyboard][key] ||= value
-          end
-        end
-      end
       
       # Initialize serial connection
       def initialize_serial

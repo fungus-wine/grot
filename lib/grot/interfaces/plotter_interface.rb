@@ -36,9 +36,8 @@ module Grot
         self.caption = WINDOW_TITLE
         self.resizable = true
         
-        # Get buffer size from config or registry defaults
-        buffer_size = config.dig(:plotter, :buffer_size) || 
-                      Grot::Config::ConfigRegistry.instance.get_value({}, :plotter, :buffer_size, DEFAULT_BUFFER_SIZE)
+        # Get buffer size from config (defaults already merged)
+        buffer_size = config.dig(:plotter, :buffer_size) || DEFAULT_BUFFER_SIZE
         
         # Initialize models
         @serial_parser = Models::SerialDataParser.new
@@ -303,8 +302,7 @@ module Grot
       
       def connect_serial
         # Get baud rate from config or registry defaults
-        baud_rate = @config.dig(:interface, :baud_rate) || 
-                    Grot::Config::ConfigRegistry.instance.get_value({}, :interface, :baud_rate, 9600)
+        baud_rate = @config.dig(:interface, :baud_rate) || 9600
         
         port = @config.dig(:basic, :port)
         

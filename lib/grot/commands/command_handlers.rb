@@ -34,8 +34,7 @@ module Grot
         
         if create_it
           puts "Creating new configuration file: #{config_file}"
-          config_manager = Grot::Config::ConfigManager.new
-          config_manager.create_default_config(config_file)
+          Grot::Config::ConfigManager.create_default_config(config_file)
           puts "Done! Edit #{config_file} to configure your board settings."
         else
           puts "No changes to the existing #{config_file} were made."
@@ -72,9 +71,8 @@ module Grot
         config_file = app.options[:config_file]
         if File.exist?(config_file)
           # Load and print the config file
-          config_manager = Grot::Config::ConfigManager.new
-          config = config_manager.load_config(config_file)
-          config_manager.print_config(config)
+          config = Grot::Config::ConfigManager.load_config(config_file)
+          puts config.inspect
         else
           puts "Config file not found"
         end
@@ -132,24 +130,9 @@ module Grot
         begin
           require 'grot/interfaces/monitor_interface'
           
-          # Get registry for validation
-          registry = Grot::Config::ConfigRegistry.instance
-          
           # Validate required config
-          unless config[:basic][:port]
+          unless config.dig(:basic, :port)
             raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
-          end
-          
-          # Set up config with defaults from registry if not specified
-          config[:basic][:baud_rate] ||= registry.get_value({}, :interface, :baud_rate, 9600)
-          
-          # Ensure monitor section exists
-          config[:monitor] ||= {}
-          
-          # Apply monitor defaults from registry
-          monitor_defaults = registry.get_category_defaults(:monitor)
-          monitor_defaults.each do |key, value|
-            config[:monitor][key] ||= value
           end
           
           # Launch monitor window
@@ -172,24 +155,9 @@ module Grot
         begin
           require 'grot/interfaces/plotter_interface'
           
-          # Get registry for validation
-          registry = Grot::Config::ConfigRegistry.instance
-          
           # Validate required config
-          unless config[:basic][:port]
+          unless config.dig(:basic, :port)
             raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
-          end
-          
-          # Set up config with defaults from registry if not specified
-          config[:baud_rate] ||= registry.get_value({}, :interface, :baud_rate, 9600)
-          
-          # Ensure plotter section exists
-          config[:plotter] ||= {}
-          
-          # Apply plotter defaults from registry
-          plotter_defaults = registry.get_category_defaults(:plotter)
-          plotter_defaults.each do |key, value|
-            config[:plotter][key] ||= value
           end
           
           # Launch plotter window

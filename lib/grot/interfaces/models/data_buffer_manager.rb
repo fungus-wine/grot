@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'grot/config/config_registry'
 
 module Grot
   module Interfaces
@@ -17,25 +16,17 @@ module Grot
         attr_reader :data_series, :timestamps
         
         def initialize(config = {})
-          # Get registry instance
-          registry = Grot::Config::ConfigRegistry.instance
-          
-          # Get max points from config, registry, or default
+          # Get max points from config or default
           if config.is_a?(Hash)
-            @max_points = config[:buffer_size] || registry.get_value({}, :plotter, :buffer_size, DEFAULT_MAX_POINTS)
+            @max_points = config[:buffer_size] || DEFAULT_MAX_POINTS
           elsif config.is_a?(Integer)
             @max_points = config
           else
-            @max_points = registry.get_value({}, :plotter, :buffer_size, DEFAULT_MAX_POINTS)
+            @max_points = DEFAULT_MAX_POINTS
           end
           
-          # Calculate cleanup size based on max points and threshold from config or registry
-          cleanup_threshold = registry.get_value({}, :plotter, 'cleanup_threshold', DEFAULT_CLEANUP_THRESHOLD)
-          
-          # If config is a hash, check if it contains the threshold
-          if config.is_a?(Hash) && config[:cleanup_threshold]
-            cleanup_threshold = config[:cleanup_threshold]
-          end
+          # Calculate cleanup size based on max points and threshold from config or default
+          cleanup_threshold = config.is_a?(Hash) ? config[:cleanup_threshold] || DEFAULT_CLEANUP_THRESHOLD : DEFAULT_CLEANUP_THRESHOLD
           
           @cleanup_size = (@max_points * cleanup_threshold).to_i
           

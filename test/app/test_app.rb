@@ -11,7 +11,6 @@ class TestApp < Minitest::Test
     
     # Check that instance variables are set
     assert_instance_of Grot::CLI::CLIParser, @app.instance_variable_get(:@cli_parser)
-    assert_instance_of Grot::Config::ConfigManager, @app.instance_variable_get(:@config_manager)
     assert_instance_of Grot::Commands::CommandBuilder, @app.instance_variable_get(:@command_builder)
     assert_instance_of Grot::Ports::PortHandler, @app.instance_variable_get(:@port_handler)
   end

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'grot/config/config_registry'
 
 module Grot
   module Interfaces
@@ -9,13 +8,10 @@ module Grot
       # It handles buffering and Arduino-style serial data parsing
       class SerialDataParser
         def initialize(config = {})
-          # Get registry instance
-          registry = Grot::Config::ConfigRegistry.instance
-          
-          # Get buffer size from config, registry, or default
+          # Get buffer size from config or default
           @buffer_size = config[:parser_buffer_size] || 
                          config[:buffer_size] || 
-                         registry.get_value({}, :plotter, :parser_buffer_size, 4096)
+                         4096
           
           @buffer = ""
           reset

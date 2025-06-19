@@ -1,196 +1,144 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 require 'tempfile'
 
 class TestConfigManager < Minitest::Test
   def setup
-    @config_manager = Grot::Config::ConfigManager.new
-    @temp_file = Tempfile.new(['grot_test_config', '.toml'])
+    @temp_config_file = Tempfile.new(['test_config', '.toml'])
   end
-  
+
   def teardown
-    @temp_file.close
-    @temp_file.unlink
-  end
-  
-
-  def test_load_config
-    # Create a valid config file with the proper structure
-    File.write(@temp_file.path, <<~TOML)
-      [basic]
-      sketch_path = "test.ino"
-      cli_path = "arduino-cli"
-      port = "/dev/ttyUSB0"
-      fqbn = "arduino:avr:uno"
-      
-      [esp32_options]
-      core_config = "dual"
-      frequency = 240
-    TOML
-    
-    # Step 1: Test the raw TOML parsing (with string keys)
-    raw_config = TomlRB.load_file(@temp_file.path)
-    
-    # Test the raw config structure with string keys
-    assert_equal 'test.ino', raw_config['basic']['sketch_path']
-    assert_equal 'arduino-cli', raw_config['basic']['cli_path']
-    assert_equal '/dev/ttyUSB0', raw_config['basic']['port']
-    assert_equal 'arduino:avr:uno', raw_config['basic']['fqbn']
-    assert_equal 'dual', raw_config['esp32_options']['core_config']
-    assert_equal 240, raw_config['esp32_options']['frequency']
-    
-    # Step 2: Now test config_manager's load_config method, which should symbolize keys
-    config = @config_manager.load_config(@temp_file.path)
-    
-    # Test the symbolized config structure
-    assert_equal 'test.ino', config[:basic][:sketch_path]
-    assert_equal 'arduino-cli', config[:basic][:cli_path]
-    assert_equal '/dev/ttyUSB0', config[:basic][:port]
-    assert_equal 'arduino:avr:uno', config[:basic][:fqbn]
-    assert_equal 'dual', config[:esp32_options][:core_config]
-    assert_equal 240, config[:esp32_options][:frequency]
-  end
-    
-  def test_config_manager_validation
-    # Create a complete config file with all required fields
-    # Use a valid FQBN from the board registry
-    File.write(@temp_file.path, <<~TOML)
-      [basic]
-      cli_path = "arduino-cli"
-      sketch_path = "test.ino"
-      port = "/dev/test"
-      fqbn = "arduino:avr:uno"
-      
-      [esp32_options]
-      core_config = "dual"
-      frequency = 240
-    TOML
-    
-    # Load the config through ConfigManager
-    raw_config = TomlRB.load_file(@temp_file.path)
-    
-    # Test raw config structure with string keys
-    assert_equal "test.ino", raw_config["basic"]["sketch_path"]
-    assert_equal "arduino:avr:uno", raw_config["basic"]["fqbn"]
-    assert_equal "dual", raw_config["esp32_options"]["core_config"]
-    
-    # Now load through config manager to get symbolized keys
-    config = @config_manager.load_config(@temp_file.path)
-    
-    # Test the symbolized config structure
-    assert_equal "test.ino", config[:basic][:sketch_path]
-    assert_equal "arduino-cli", config[:basic][:cli_path]
-    assert_equal "/dev/test", config[:basic][:port]
-    assert_equal "arduino:avr:uno", config[:basic][:fqbn]
-    assert_equal "dual", config[:esp32_options][:core_config]
-    assert_equal 240, config[:esp32_options][:frequency]
+    @temp_config_file.close
+    @temp_config_file.unlink
   end
 
-  def test_load_config_file_not_found
-    assert_raises(Grot::Errors::ConfigurationError) do
-      @config_manager.load_config('nonexistent_file.toml')
-    end
-  end
-  
-  def test_load_config_invalid_toml
-    # Create an invalid config file
-    File.write(@temp_file.path, <<~TOML)
-      sketch_path = "test.ino
-      cli_path = "arduino-cli"
-    TOML
+  def test_load_config_with_defaults
+    # Test loading with no config file - should get defaults
+    config = Grot::Config::ConfigManager.load_config(nil)
     
-    assert_raises(Grot::Errors::ConfigurationError) do
-      @config_manager.load_config(@temp_file.path)
-    end
-  end
-  
-  def test_config_merging
-    # Define global and project configs as simple hashes for testing
-    global_config = {
-      basic: {
-        cli_path: "global-arduino-cli",
-        sketch_path: "global-sketch.ino" 
-      }
-    }
-    
-    project_config = {
-      basic: {
-        cli_path: "project-arduino-cli"
-      }
-    }
-    
-    # Use the deep_merge method (it's private, so we need to use send)
-    merged_config = @config_manager.send(:deep_merge, global_config, project_config)
-    
-    # Test merging behavior
-    assert_equal "project-arduino-cli", merged_config[:basic][:cli_path]
-    assert_equal "global-sketch.ino", merged_config[:basic][:sketch_path]
+    # Verify defaults are loaded
+    assert_equal 9600, config.dig(:interface, :baud_rate)
+    assert_equal 500, config.dig(:plotter, :buffer_size)
+    assert_equal 10000, config.dig(:monitor, :buffer_size)
+    assert_equal "arduino-cli", config.dig(:basic, :cli_path)
+    assert_equal true, config.dig(:keyboard, :auto_load_modules)
   end
 
-  def test_board_specific_config
-    # Create a complete config with all required fields in the basic section
-    File.write(@temp_file.path, <<~TOML)
+  def test_load_config_with_toml_file
+    # Write a test config file
+    @temp_config_file.write(<<~TOML)
       [basic]
-      cli_path = "arduino-cli"
-      sketch_path = "test.ino"
-      port = "/dev/ttyS0"
-      fqbn = "esp32:esp32:esp32s3"
+      cli_path = "/custom/arduino-cli"
       
-      [esp32_options]
-      core_config = "single-0"
-      frequency = 160
+      [interface]
+      baud_rate = 115200
+      
+      [plotter]
+      buffer_size = 1000
     TOML
-    
+    @temp_config_file.close
+
     # Load the config
-    config = @config_manager.load_config(@temp_file.path)
+    config = Grot::Config::ConfigManager.load_config(@temp_config_file.path)
     
-    # BoardStrategyFactory expects fqbn at the top level, not under basic
-    # Create a modified config with fqbn at the top level for the strategy factory
-    config[:fqbn] = config[:basic][:fqbn]
+    # Verify custom values override defaults
+    assert_equal "/custom/arduino-cli", config.dig(:basic, :cli_path)
+    assert_equal 115200, config.dig(:interface, :baud_rate)
+    assert_equal 1000, config.dig(:plotter, :buffer_size)
     
-    # Create a strategy with this config
-    strategy = Grot::Boards::BoardStrategyFactory.create_strategy(config)
-    
-    # Verify it's the right type and has the right settings
-    assert_instance_of Grot::Boards::Strategies::ESP32S3BoardStrategy, strategy
-    assert_equal "single-0", config[:esp32_options][:core_config]
-    assert_equal 160, config[:esp32_options][:frequency]
+    # Verify defaults are still present for non-overridden values
+    assert_equal 10000, config.dig(:monitor, :buffer_size)
+    assert_equal true, config.dig(:keyboard, :auto_load_modules)
   end
 
-  def test_default_fallbacks
-    registry = Grot::Config::ConfigRegistry.instance
+  def test_type_coercion
+    # Write a config with string values that should be coerced
+    @temp_config_file.write(<<~TOML)
+      [interface]
+      baud_rate = "57600"
+      
+      [plotter]
+      buffer_size = "750"
+      
+      [esp32_options]
+      frequency = "160"
+      
+      [giga_options]
+      flash_split = "0.8"
+    TOML
+    @temp_config_file.close
+
+    config = Grot::Config::ConfigManager.load_config(@temp_config_file.path)
     
-    # Test empty config falls back to registry default
-    value = registry.get_value({}, :interface, :baud_rate, 99)
-    assert_equal 9600, value  # Registry default is 9600
+    # Verify types are coerced correctly
+    assert_equal 57600, config.dig(:interface, :baud_rate)
+    assert_instance_of Integer, config.dig(:interface, :baud_rate)
     
-    # Test registry falls back to provided default
-    value = registry.get_value({}, :nonexistent, :nonexistent, 42)
-    assert_equal 42, value
+    assert_equal 750, config.dig(:plotter, :buffer_size)
+    assert_instance_of Integer, config.dig(:plotter, :buffer_size)
+    
+    assert_equal 160, config.dig(:esp32_options, :frequency)
+    assert_instance_of Integer, config.dig(:esp32_options, :frequency)
+    
+    assert_equal 0.8, config.dig(:giga_options, :flash_split)
+    assert_instance_of Float, config.dig(:giga_options, :flash_split)
   end
 
-  def test_command_specific_validation
-    config = {basic: {cli_path: "arduino-cli"}}
-    
-    # Command that requires sketch_path and fqbn
-    command_def = {
-      requires_config: true, 
-      requires_sketch_path: true, 
-      requires_fqbn: true
-    }
-    
-    # Should raise error with missing required fields
-    assert_raises(Grot::Errors::ConfigurationError) do
-      @config_manager.validate_config(config, command_def)
+  def test_invalid_toml_file
+    # Write invalid TOML
+    @temp_config_file.write("invalid toml [[[")
+    @temp_config_file.close
+
+    error = assert_raises(RuntimeError) do
+      Grot::Config::ConfigManager.load_config(@temp_config_file.path)
     end
     
-    # Add required fields and test again
-    config[:basic][:sketch_path] = "test.ino"
-    config[:basic][:fqbn] = "arduino:avr:uno"
-    
-    # Simply run the method - if no exception is raised, the test passes
-    @config_manager.validate_config(config, command_def)
-    # Add an assert to make the test have a verification
-    assert true, "No exception was raised with complete config"
+    assert_match(/Failed to load config file/, error.message)
   end
 
+  def test_invalid_type_coercion
+    # Write a config with invalid integer value
+    @temp_config_file.write(<<~TOML)
+      [interface]
+      baud_rate = "not_a_number"
+    TOML
+    @temp_config_file.close
+
+    error = assert_raises(RuntimeError) do
+      Grot::Config::ConfigManager.load_config(@temp_config_file.path)
+    end
+    
+    assert_match(/interface.baud_rate must be an integer/, error.message)
+  end
+
+  def test_nonexistent_file
+    # Should work fine with non-existent file (uses defaults)
+    config = Grot::Config::ConfigManager.load_config("/path/that/does/not/exist.toml")
+    
+    # Should still get defaults
+    assert_equal 9600, config.dig(:interface, :baud_rate)
+    assert_equal 500, config.dig(:plotter, :buffer_size)
+  end
+
+  def test_deep_merge
+    # Write a config that partially overrides nested structures
+    @temp_config_file.write(<<~TOML)
+      [keyboard_debouncer]
+      enabled = false
+      repeat_delay = 1.0
+      # Should keep other keyboard_debouncer defaults
+    TOML
+    @temp_config_file.close
+
+    config = Grot::Config::ConfigManager.load_config(@temp_config_file.path)
+    
+    # Verify partial override works
+    assert_equal false, config.dig(:keyboard_debouncer, :enabled)
+    assert_equal 1.0, config.dig(:keyboard_debouncer, :repeat_delay)
+    
+    # Verify other defaults in same section are preserved
+    assert_equal 60, config.dig(:keyboard_debouncer, :priority)
+    assert_equal 0.05, config.dig(:keyboard_debouncer, :repeat_rate)
+  end
 end
