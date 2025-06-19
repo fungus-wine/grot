@@ -51,37 +51,6 @@ module Grot
             "Maximum number of lines to keep in the monitor buffer"
           )
           
-          registry.add_option(
-            :monitor,
-            :show_timestamps,
-            :boolean,
-            false,
-            "Show timestamps for each line by default"
-          )
-          
-          registry.add_option(
-            :monitor,
-            :show_line_numbers,
-            :boolean,
-            false,
-            "Show line numbers by default"
-          )
-          
-          registry.add_option(
-            :monitor,
-            :timestamp_format,
-            :string,
-            "%H:%M:%S.%L",
-            "Format for timestamps (strftime format string)"
-          )
-          
-          registry.add_option(
-            :monitor,
-            :auto_scroll,
-            :boolean,
-            true,
-            "Automatically scroll to the bottom when new data arrives"
-          )
         end
         
         def self.load_plotter_config(registry)
