@@ -36,7 +36,9 @@ module Grot
         end
         
         def draw
-          return unless @interface.plotter_state[:show_help]
+          # Support both plotter and monitor interfaces
+          state = @interface.respond_to?(:plotter_state) ? @interface.plotter_state : @interface.monitor_state
+          return unless state[:show_help]
           
           # Calculate dialog dimensions based on content
           dialog_area = calculate_dialog_area
