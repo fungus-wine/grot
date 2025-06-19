@@ -93,45 +93,6 @@ module Grot
             "Maximum number of data points to keep for each series"
           )
           
-          registry.add_option(
-            :plotter,
-            :auto_scale,
-            :boolean,
-            true,
-            "Automatically scale Y axis to fit data"
-          )
-          
-          registry.add_option(
-            :plotter,
-            :default_y_min,
-            :float,
-            -10.0,
-            "Default minimum Y axis value when auto-scale is disabled"
-          )
-          
-          registry.add_option(
-            :plotter,
-            :default_y_max,
-            :float,
-            110.0,
-            "Default maximum Y axis value when auto-scale is disabled"
-          )
-          
-          registry.add_option(
-            :plotter,
-            :show_legend,
-            :boolean,
-            true,
-            "Show series legend by default"
-          )
-          
-          registry.add_option(
-            :plotter,
-            :max_visible_series,
-            :integer,
-            8,
-            "Maximum number of series to show in the legend"
-          )
         end
       end
     end
