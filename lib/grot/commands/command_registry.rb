@@ -60,21 +60,6 @@ module Grot
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: "compile"
         },
-        "compile" => {
-          description: "Compile the sketch, but noisy",
-          requires_config: true,
-          requires_fqbn: true,
-          requires_sketch_path: true,
-          board_specific: true,
-          verbose: true,
-          spinner: true,
-          spinner_message: "Building sketch",
-          spinner_type: :dots,
-          spinner_color: :green,
-          pre_action: ->(app) { puts "Compiling code...\n" },
-          post_action: ->(app, cmd) { app.display_executed_command(cmd) },
-          action: "compile"
-        },
         "load" => {
           description: "Upload sketch to board",
           requires_config: true,
