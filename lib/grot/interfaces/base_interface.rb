@@ -14,8 +14,8 @@ module Grot
       # Interface constants
       FONT_NAME = "InconsolataNerdFont-Regular"
       FONT_SIZE = 16
-      WINDOW_WIDTH = 800
-      WINDOW_HEIGHT = 600
+      WINDOW_WIDTH = 1200
+      WINDOW_HEIGHT = 800
       MIN_WINDOW_WIDTH = 400
       MIN_WINDOW_HEIGHT = 300
 

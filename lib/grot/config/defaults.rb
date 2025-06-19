@@ -19,7 +19,9 @@ module Grot
       },
       
       monitor: {
-        buffer_size: 10000
+        buffer_size: 10000,
+        auto_start_logging: false,
+        log_directory: "./log"
       },
       
       keyboard: {

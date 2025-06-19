@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 require 'gosu'
+require 'fileutils'
 require 'grot/interfaces/base_interface'
 require 'grot/interfaces/components/command_bar'
 require 'grot/interfaces/components/help_dialog'
+require 'grot/interfaces/components/status_bar'
 require 'grot/interfaces/models/serial_connection'
 
 module Grot
@@ -41,7 +43,10 @@ module Grot
           show_help: false,
           autoscroll: true,
           scroll_position: 0,
-          timestamps: false
+          timestamps: false,
+          logging: false,
+          log_file: nil,
+          log_file_path: nil
         }
         
         # Initialize state for the command bar
@@ -53,9 +58,13 @@ module Grot
         # Initialize components
         @command_bar = Components::CommandBar.new(self, @font, @theme_manager)
         @help_dialog = Components::HelpDialog.new(self, @font, @theme_manager)
+        @status_bar = Components::StatusBar.new(self, @font, @theme_manager)
         
         # Set up help content
         setup_help_content
+
+        # Initialize logging
+        setup_logging
 
         connect_serial
       end
@@ -65,6 +74,8 @@ module Grot
           "KEYBOARD SHORTCUTS:",
           "Space - Pause/resume data collection",
           "T - Toggle timestamps",
+          "L - Start/stop logging to file",
+          "B - Insert bookmark in log",
           "H - Show/hide this help dialog",
           "Tab - Activate command input",
           "C - Clear monitor",
@@ -77,6 +88,15 @@ module Grot
         
         # Set the content in the help dialog
         @help_dialog.set_content(@help_content)
+      end
+      
+      def setup_logging
+        # Check if auto-start logging is enabled
+        auto_start = @config.dig(:monitor, :auto_start_logging) || false
+        
+        if auto_start
+          start_logging
+        end
       end
       
       def resize(requested_width, requested_height)
@@ -115,10 +135,47 @@ module Grot
             @command_state[:text] = text_input.text
           end
         end
+        
+        # Update status bar
+        update_status_bar
+      end
+      
+      def update_status_bar
+        # Connection status
+        if @serial_connection&.connected
+          @status_bar.set_status("Port", @config.dig(:basic, :port) || "Unknown", @theme_manager.text_color)
+        else
+          @status_bar.set_status("Port", "Disconnected", Gosu::Color::RED)
+        end
+        
+        # Logging status
+        if @monitor_state[:logging]
+          @status_bar.set_status("Log", "Recording", @theme_manager.text_color)
+          if @monitor_state[:log_file_path]
+            @status_bar.set_status("Log File", @monitor_state[:log_file_path], @theme_manager.text_color)
+          end
+        else
+          @status_bar.set_status("Log", "Off", @theme_manager.text_color)
+        end
+        
+        # Pause status
+        if @monitor_state[:paused]
+          @status_bar.set_status("Status", "Paused", Gosu::Color::YELLOW)
+        else
+          @status_bar.set_status("Status", "Active", @theme_manager.text_color)
+        end
+        
+        # Timestamps
+        if @monitor_state[:timestamps]
+          @status_bar.set_status("Timestamps", "On", @theme_manager.text_color)
+        else
+          @status_bar.set_status("Timestamps", "Off", @theme_manager.text_color)
+        end
       end
       
       def draw_interface
         draw_text_display
+        @status_bar.draw
         @command_bar.draw
         @help_dialog.draw
       end
@@ -146,8 +203,11 @@ module Grot
         end
       end
       
-      def add_text_line(text)
-        # Add timestamp if enabled
+      def add_text_line(text, color = nil)
+        # Log the raw text first (before adding display timestamps)
+        write_to_log(text) if @monitor_state[:logging]
+        
+        # Add timestamp if enabled for display
         if @monitor_state[:timestamps]
           timestamp = Time.now.strftime("%H:%M:%S.%3N")
           text = "[#{timestamp}] #{text}"
@@ -156,7 +216,8 @@ module Grot
         # Add to buffer
         @text_buffer << {
           text: text,
-          timestamp: Time.now
+          timestamp: Time.now,
+          color: color || @theme_manager.text_color
         }
         
         # Trim buffer if it exceeds maximum size
@@ -169,8 +230,8 @@ module Grot
       def draw_text_display
         return if @text_buffer.empty?
         
-        # Calculate available space for text
-        text_area_height = height - Components::CommandBar::HEIGHT
+        # Calculate available space for text (between status bar and command bar)
+        text_area_height = height - Components::StatusBar::HEIGHT - Components::CommandBar::HEIGHT
         visible_lines = (text_area_height / LINE_HEIGHT).floor
         
         # Calculate which lines to display based on scroll position
@@ -178,16 +239,16 @@ module Grot
         start_line = [total_lines - visible_lines - @monitor_state[:scroll_position], 0].max
         end_line = [start_line + visible_lines - 1, total_lines - 1].min
         
-        # Draw background
-        draw_rect(0, 0, width, text_area_height, @theme_manager.background_color, 0)
+        # Draw background (positioned below status bar)
+        draw_rect(0, Components::StatusBar::HEIGHT, width, text_area_height, @theme_manager.background_color, 0)
         
-        # Draw text lines
+        # Draw text lines (positioned below status bar)
         (start_line..end_line).each do |i|
-          y_position = (i - start_line) * LINE_HEIGHT
+          y_position = Components::StatusBar::HEIGHT + (i - start_line) * LINE_HEIGHT
           text_data = @text_buffer[i]
           
-          # Use UTF-8 compatible text rendering
-          @font.draw_text(text_data[:text], TEXT_MARGIN, y_position, 1, 1, 1, @theme_manager.text_color)
+          # Use UTF-8 compatible text rendering with custom color
+          @font.draw_text(text_data[:text], TEXT_MARGIN, y_position, 1, 1, 1, text_data[:color])
         end
         
         # Draw scrollbar if needed
@@ -199,7 +260,7 @@ module Grot
         scrollbar_width = 10
         scrollbar_x = width - scrollbar_width - 5
         
-        text_area_height = height - Components::CommandBar::HEIGHT
+        text_area_height = height - Components::StatusBar::HEIGHT - Components::CommandBar::HEIGHT
         scrollbar_height = text_area_height
         
         # Calculate scrollbar thumb position and size
@@ -209,10 +270,10 @@ module Grot
         if total_lines > visible_lines
           thumb_height = [scrollbar_height * visible_lines / total_lines, 20].max
           scroll_ratio = @monitor_state[:scroll_position].to_f / (total_lines - visible_lines)
-          thumb_y = (scrollbar_height - thumb_height) * (1 - scroll_ratio)
+          thumb_y = Components::StatusBar::HEIGHT + (scrollbar_height - thumb_height) * (1 - scroll_ratio)
           
-          # Draw scrollbar track
-          draw_rect(scrollbar_x, 0, scrollbar_width, scrollbar_height, @theme_manager.grid_color, 1)
+          # Draw scrollbar track (positioned below status bar)
+          draw_rect(scrollbar_x, Components::StatusBar::HEIGHT, scrollbar_width, scrollbar_height, @theme_manager.grid_color, 1)
           
           # Draw scrollbar thumb in cyan
           draw_rect(scrollbar_x + 1, thumb_y, scrollbar_width - 2, thumb_height, Gosu::Color::CYAN, 1)
@@ -239,6 +300,10 @@ module Grot
             toggle_pause
           when Gosu::KB_T
             toggle_timestamps
+          when Gosu::KB_L
+            toggle_logging
+          when Gosu::KB_B
+            insert_bookmark
           when Gosu::KB_H
             toggle_help
           when Gosu::KB_UP
@@ -269,6 +334,19 @@ module Grot
       
       def toggle_timestamps
         @monitor_state[:timestamps] = !@monitor_state[:timestamps]
+      end
+      
+      def toggle_logging
+        if @monitor_state[:logging]
+          stop_logging
+        else
+          start_logging
+        end
+      end
+      
+      def insert_bookmark
+        bookmark_text = "=== BOOKMARK: #{Time.now.strftime('%H:%M:%S')} ==="
+        add_text_line(bookmark_text, Gosu::Color::CYAN)
       end
       
       def toggle_help
@@ -326,7 +404,7 @@ module Grot
       end
       
       def visible_line_count
-        text_area_height = height - Components::CommandBar::HEIGHT
+        text_area_height = height - Components::StatusBar::HEIGHT - Components::CommandBar::HEIGHT
         (text_area_height / LINE_HEIGHT).floor
       end
       
@@ -358,11 +436,118 @@ module Grot
         else
           # Send the command to the Arduino
           @serial_connection.write_line(command)
-          # Optionally show sent command in the monitor
-          add_text_line("> #{command}")
+          # Show sent command in the monitor with prefix
+          sent_command = "> #{command}"
+          
+          # Log the sent command if logging is enabled
+          write_to_log(sent_command) if @monitor_state[:logging]
+          
+          # Add to display (but don't double-log)
+          if @monitor_state[:timestamps]
+            timestamp = Time.now.strftime("%H:%M:%S.%3N")
+            sent_command = "[#{timestamp}] #{sent_command}"
+          end
+          
+          @text_buffer << {
+            text: sent_command,
+            timestamp: Time.now,
+            color: Gosu::Color::CYAN
+          }
         end
 
         @command_state[:text] = ""
+      end
+      
+      # Logging methods
+      
+      def find_next_log_number(log_dir)
+        # Find existing monitor log files and get the highest number
+        existing_logs = Dir.glob(File.join(log_dir, "monitor_*.log"))
+        
+        if existing_logs.empty?
+          return 1
+        end
+        
+        # Extract numbers from filenames
+        numbers = existing_logs.map do |file|
+          basename = File.basename(file, ".log")
+          match = basename.match(/monitor_(\d+)/)
+          match ? match[1].to_i : 0
+        end
+        
+        # Return next sequential number
+        numbers.max + 1
+      end
+      
+      def start_logging
+        return if @monitor_state[:logging]
+        
+        log_dir = @config.dig(:monitor, :log_directory) || "./log"
+        FileUtils.mkdir_p(log_dir) unless Dir.exist?(log_dir)
+        
+        # Find next sequential number
+        next_number = find_next_log_number(log_dir)
+        log_filename = "monitor_#{next_number}.log"
+        log_path = File.join(log_dir, log_filename)
+        
+        begin
+          @monitor_state[:log_file] = File.open(log_path, 'w')
+          @monitor_state[:log_file_path] = log_path
+          @monitor_state[:logging] = true
+          
+          # Write session header
+          header = [
+            "=== Grot Serial Monitor Log ===",
+            "Started: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}",
+            "Port: #{@config.dig(:basic, :port)}",
+            "Baud Rate: #{@config.dig(:interface, :baud_rate) || 9600}",
+            "==============================",
+            ""
+          ]
+          
+          header.each { |line| write_to_log(line) }
+          add_text_line("=== Logging started: #{log_filename} ===")
+          
+        rescue => e
+          add_text_line("=== Failed to start logging: #{e.message} ===")
+        end
+      end
+      
+      def stop_logging
+        return unless @monitor_state[:logging]
+        
+        begin
+          if @monitor_state[:log_file]
+            write_to_log("")
+            write_to_log("=== Session ended: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')} ===")
+            @monitor_state[:log_file].close
+            @monitor_state[:log_file] = nil
+          end
+          
+          @monitor_state[:logging] = false
+          @monitor_state[:log_file_path] = nil
+          add_text_line("=== Logging stopped ===")
+          
+        rescue => e
+          add_text_line("=== Error - stopping logging: #{e.message} ===")
+          @monitor_state[:logging] = false
+          @monitor_state[:log_file] = nil
+          @monitor_state[:log_file_path] = nil
+        end
+      end
+      
+      def write_to_log(text)
+        return unless @monitor_state[:logging] && @monitor_state[:log_file]
+        
+        begin
+          timestamp = Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N")
+          @monitor_state[:log_file].puts("[#{timestamp}] #{text}")
+          @monitor_state[:log_file].flush
+        rescue => e
+          # If logging fails, stop logging to prevent repeated errors
+          add_text_line("Logging error: #{e.message}")
+          stop_logging
+        end
       end
       
       def connect_serial
@@ -392,6 +577,12 @@ module Grot
           add_text_line("Connection error: #{e.message}")
           Grot::Debug.error "Connection error: #{e.message}"
         end
+      end
+      
+      def close
+        # Stop logging when closing
+        stop_logging if @monitor_state[:logging]
+        super
       end
     end
   end
