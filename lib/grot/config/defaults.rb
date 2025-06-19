@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'grot/keyboard/key_constants'
+
 module Grot
   module Config
     DEFAULTS = {
@@ -53,14 +55,14 @@ module Grot
       },
       
       keyboard_mac_adapter: {
-        enabled: (RUBY_PLATFORM =~ /darwin/i ? true : false),
+        enabled: (Grot::Keyboard::KeyConstants.platform == :macos),
         priority: 70,
         command_fix: true,
         auto_fix_stuck_modifiers: true
       },
       
       keyboard_linux_adapter: {
-        enabled: (RUBY_PLATFORM =~ /linux/i ? true : false),
+        enabled: (Grot::Keyboard::KeyConstants.platform == :linux),
         priority: 71,
         fix_window_manager_conflicts: true
       },

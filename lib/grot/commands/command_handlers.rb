@@ -4,7 +4,6 @@ require "grot/version"
 require "grot/boards/board_registry"
 require "grot/cli/colorator"
 require "grot/cli/progress_display"
-require "fileutils"
 require "open3"
 
 module Grot
@@ -111,19 +110,6 @@ module Grot
         app.instance_variable_set(:@last_executed_command, cmd)
         
         status.exitstatus
-      end
-
-      # Build command with progress spinner
-      def self.build_command(app, config)
-        cli_path = config[:basic][:cli_path] || 'arduino-cli'
-        fqbn = config[:fqbn]
-        sketch_path = config[:sketch_path]
-        
-        # Construct the command
-        cmd = "#{cli_path} compile #{sketch_path} --fqbn #{fqbn}"
-        
-        # The app now handles the spinner internally based on command definition
-        app.send(:execute_cli_command, "build", cmd)
       end
 
       def self.monitor_command(app, config)

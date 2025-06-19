@@ -3,7 +3,6 @@
 require 'grot/keyboard/module_base'
 require 'grot/keyboard/key_event'
 require 'grot/keyboard/key_constants'
-require 'grot/keyboard/mac_utils'
 
 module Grot
   module Keyboard

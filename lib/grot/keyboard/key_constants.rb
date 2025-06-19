@@ -116,6 +116,7 @@ module Grot
 
       private
 
+      # move this into a grot utils module if it becomes unclear why it's here
       def self.detect_platform
         case RUBY_PLATFORM
         when /darwin/

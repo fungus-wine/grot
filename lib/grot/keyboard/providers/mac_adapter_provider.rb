@@ -1,6 +1,6 @@
 require 'grot/keyboard/module_provider'
 require 'grot/keyboard/modules/mac_adapter_module'
-require 'grot/keyboard/mac_utils'
+require 'grot/keyboard/key_constants'
 
 Grot::Keyboard::ModuleProvider.register(
   :mac_adapter,
@@ -11,7 +11,7 @@ Grot::Keyboard::ModuleProvider.register(
   keyboard_config = config[:keyboard_mac_adapter] || {}
   
   # Only enable on macOS by default, or if explicitly enabled in config
-  default_enabled = Grot::Keyboard::MacUtils.macos?
+  default_enabled = Grot::Keyboard::KeyConstants.platform == :macos
   enabled = keyboard_config.key?(:enabled) ? keyboard_config[:enabled] : default_enabled
   
   # Return the configuration
