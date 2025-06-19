@@ -303,11 +303,10 @@ module Grot
       
       def connect_serial
         # Get baud rate from config or registry defaults
-        baud_rate = @config[:baud_rate] || 
-                    @config.dig(:interface, :baud_rate) || 
+        baud_rate = @config.dig(:interface, :baud_rate) || 
                     Grot::Config::ConfigRegistry.instance.get_value({}, :interface, :baud_rate, 9600)
         
-        port = @config[:port]
+        port = @config.dig(:basic, :port)
         
         begin
           # Make sure we're not already connected

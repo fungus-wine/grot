@@ -131,7 +131,7 @@ module Grot
       
       # Create board strategy if needed for later use
       board_strategy = nil
-      if command_definition[:board_specific] && @config && @config[:fqbn]
+      if command_definition[:board_specific] && @config && @config.dig(:basic, :fqbn)
         board_strategy = Boards::BoardStrategyFactory.create_strategy(@config)
       end
       

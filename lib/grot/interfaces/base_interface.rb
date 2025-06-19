@@ -96,7 +96,7 @@ module Grot
         port_handler = Ports::PortHandler.new
         port = port_handler.validate_port(@config.dig(:basic, :port))
         begin
-          baud_rate = @config[:baud_rate] || @config.dig(:interface, :baud_rate) || 9600
+          baud_rate = @config.dig(:interface, :baud_rate) || 9600
           @serial_connection = Grot::Interfaces::Models::SerialConnection.new(port, baud_rate.to_i)
         rescue 
           raise 
