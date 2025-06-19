@@ -160,8 +160,8 @@ class TestConfigManager < Minitest::Test
     registry = Grot::Config::ConfigRegistry.instance
     
     # Test empty config falls back to registry default
-    value = registry.get_value({}, :interface, :font_size, 99)
-    assert_equal 16, value  # Registry default is 16
+    value = registry.get_value({}, :interface, :baud_rate, 99)
+    assert_equal 9600, value  # Registry default is 9600
     
     # Test registry falls back to provided default
     value = registry.get_value({}, :nonexistent, :nonexistent, 42)
