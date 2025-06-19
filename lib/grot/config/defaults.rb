@@ -55,7 +55,8 @@ module Grot
       keyboard_mac_adapter: {
         enabled: (RUBY_PLATFORM =~ /darwin/i ? true : false),
         priority: 70,
-        command_fix: true
+        command_fix: true,
+        auto_fix_stuck_modifiers: true
       },
       
       keyboard_linux_adapter: {

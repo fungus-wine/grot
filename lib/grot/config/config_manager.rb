@@ -29,6 +29,17 @@ module Grot
         config
       end
       
+      def self.create_default_config(file_path)
+        require 'grot/config/defaults'
+        
+        # Generate basic TOML content from defaults
+        toml_content = generate_default_toml
+        
+        File.open(file_path, 'w') do |file|
+          file.write(toml_content)
+        end
+      end
+      
       private
       
       def self.load_toml(path)
@@ -118,6 +129,79 @@ module Grot
             value
           end
         end
+      end
+      
+      def self.generate_default_toml
+        require 'grot/config/defaults'
+        
+        <<~TOML
+          # Grot Configuration File
+          # This file configures your Arduino development environment
+          # Uncomment and modify values as needed
+          
+          [basic]
+          cli_path = "#{DEFAULTS[:basic][:cli_path]}"
+          fqbn = "arduino:avr:uno"  # Board fully qualified name - run 'grot boards' for options
+          port = "/dev/ttyUSB0"     # Serial port - run 'grot ports' for available ports  
+          sketch_path = "."         # Path to your Arduino sketch directory
+          
+          [interface]
+          baud_rate = #{DEFAULTS[:interface][:baud_rate]}
+          logs_directory = "#{DEFAULTS[:interface][:logs_directory]}"
+          
+          [plotter]
+          buffer_size = #{DEFAULTS[:plotter][:buffer_size]}  # Number of data points to keep in memory
+          
+          [monitor]
+          buffer_size = #{DEFAULTS[:monitor][:buffer_size]}  # Serial monitor buffer size
+          
+          # Board-specific configuration options
+          # These sections are only needed for specific boards and are otherwise ignored
+          
+          [giga_options]
+          # Options for Arduino GIGA R1 WiFi boards
+          # target_core = "#{DEFAULTS[:giga_options][:target_core]}"     # Target processor core: "CM4" or "CM7"
+          # flash_split = #{DEFAULTS[:giga_options][:flash_split]}       # Memory split ratio (0.0 to 1.0)
+          
+          [esp32_options] 
+          # Options for ESP32-S3 boards
+          # core_config = "#{DEFAULTS[:esp32_options][:core_config]}"    # Core usage: "dual", "single-0", "single-1"
+          # frequency = #{DEFAULTS[:esp32_options][:frequency]}          # CPU frequency in MHz: 80, 160, or 240
+          
+          # Keyboard handling configuration
+          # Advanced options for keyboard input in GUI interfaces
+          
+          [keyboard_key_state]
+          enabled = #{DEFAULTS[:keyboard_key_state][:enabled]}
+          priority = #{DEFAULTS[:keyboard_key_state][:priority]}
+          
+          [keyboard_stuck_key_fixer]
+          enabled = #{DEFAULTS[:keyboard_stuck_key_fixer][:enabled]}
+          priority = #{DEFAULTS[:keyboard_stuck_key_fixer][:priority]}
+          auto_release_delay = #{DEFAULTS[:keyboard_stuck_key_fixer][:auto_release_delay]}
+          
+          [keyboard_mac_adapter]
+          enabled = #{DEFAULTS[:keyboard_mac_adapter][:enabled]}       # Auto-enabled on macOS
+          priority = #{DEFAULTS[:keyboard_mac_adapter][:priority]}
+          command_fix = #{DEFAULTS[:keyboard_mac_adapter][:command_fix]}
+          auto_fix_stuck_modifiers = #{DEFAULTS[:keyboard_mac_adapter][:auto_fix_stuck_modifiers]}
+          
+          [keyboard_linux_adapter]
+          enabled = #{DEFAULTS[:keyboard_linux_adapter][:enabled]}     # Auto-enabled on Linux
+          priority = #{DEFAULTS[:keyboard_linux_adapter][:priority]}
+          fix_window_manager_conflicts = #{DEFAULTS[:keyboard_linux_adapter][:fix_window_manager_conflicts]}
+          
+          [keyboard_debouncer]
+          enabled = #{DEFAULTS[:keyboard_debouncer][:enabled]}
+          priority = #{DEFAULTS[:keyboard_debouncer][:priority]}
+          repeat_delay = #{DEFAULTS[:keyboard_debouncer][:repeat_delay]}
+          repeat_rate = #{DEFAULTS[:keyboard_debouncer][:repeat_rate]}
+          
+          [keyboard_buffer]
+          enabled = #{DEFAULTS[:keyboard_buffer][:enabled]}
+          priority = #{DEFAULTS[:keyboard_buffer][:priority]}
+          buffer_time = #{DEFAULTS[:keyboard_buffer][:buffer_time]}
+        TOML
       end
     end
   end
