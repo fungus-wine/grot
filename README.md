@@ -45,7 +45,7 @@ grot -h
 
 ## Configuration
 
-Grot uses a `project-name.toml` configuration file in your project's root directory. This file will override the global configuration that that you can optionally put at `~/.config/grot/config.toml`.
+Grot uses a `.grotconfig` configuration file in your project's root directory. This file will override the global configuration that that you can optionally put at `~/.config/grot/.grotconfig`.
 
 ```toml
 #example grot config file 
