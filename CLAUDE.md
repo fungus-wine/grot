@@ -66,7 +66,8 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - `minitest` + `mocha` - Testing framework
 
 ### Configuration
-- Default config file: `grot.toml` in current directory
+- Default config file: `.grotconfig` in current directory
+- Global config file: `~/.config/grot/.grotconfig`
 - Config categories: board, keyboard, interface, monitor, plotter, theme
 - Monitor config: auto_start_logging, log_directory (default: "./log")
 - Plotter config: buffer_size (default: 500)
