@@ -1,6 +1,5 @@
 # Grot
 
-
 Grot is a command line tool that wraps the `arduino-cli` library. It sports simple configuration driven commands, a serial monitor, and a serial plotter. The serial tools are both compatible with the Arduino IDE 2.x data formats.
 
 Grot was born out of frustration with the overly simple Arduino IDE, a dislike of Visual Studio, and my old school Ruby roots (text editors and command lines!). In other words I wanted a simple command line tool with commands that I can actually remember, and I didn't want to give up the serial monitor and plotter.
@@ -14,7 +13,6 @@ This is a hobby project. Use at your own risk. I've used it myself for a little 
 Grot uses the [gosu](https://github.com/gosu/gosu) library for the serial monitor and serial plotter. It has some specific dependencies that you'll want to make sure you have installed.
 
 This gem is not on Rubygems as of now. You'll have to clone the repo, build the gem, and install it manually.
-```
 
 ## Usage
 
@@ -41,7 +39,8 @@ grot ports
 grot boards
 
 # help
-grot -h  
+grot -h
+ 
 ```
 
 ## Configuration
