@@ -24,7 +24,7 @@ module Grot
           opts.separator ""
           opts.separator "Options:"
           
-          opts.on("-c", "--config CONFIG_FILE", "Specify config file (default: ./[directory_name].toml)") do |file|
+          opts.on("-c", "--config CONFIG_FILE", "Specify config file (default: ./.grotconfig)") do |file|
             @options[:config_file] = file
           end
           

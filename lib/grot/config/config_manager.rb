@@ -11,7 +11,7 @@ module Grot
         config = deep_dup(DEFAULTS)
         
         # Merge global config if exists
-        global_config_path = File.expand_path("~/.config/grot/config.toml")
+        global_config_path = File.expand_path("~/.config/grot/.grotconfig")
         if File.exist?(global_config_path)
           global_config = load_toml(global_config_path)
           config = deep_merge(config, global_config)
@@ -143,7 +143,7 @@ module Grot
           cli_path = "#{DEFAULTS[:basic][:cli_path]}"
           fqbn = "arduino:avr:uno"  # Board fully qualified name - run 'grot boards' for options
           port = "/dev/ttyUSB0"     # Serial port - run 'grot ports' for available ports  
-          sketch_path = "."         # Path to your Arduino sketch directory
+          sketch_path = "."  # Path to your Arduino sketch directory
           
           [interface]
           baud_rate = #{DEFAULTS[:interface][:baud_rate]}

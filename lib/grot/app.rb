@@ -101,8 +101,7 @@ module Grot
     end
     
     def default_config_filename
-      # Use TOML extension by default
-      File.basename(Dir.pwd) + ".toml"
+      ".grotconfig"
     end
     
     # Command handling methods
@@ -181,6 +180,7 @@ module Grot
       if File.exist?(@options[:config_file])
         begin
           @config = Grot::Config::ConfigManager.load_config(@options[:config_file])
+          apply_cli_overrides
           return true
         rescue TomlRB::ParseError => e
           error "Error parsing config file: #{e.message}"
@@ -196,6 +196,11 @@ module Grot
       end
     end
     
+    # Apply CLI option overrides to loaded config
+    def apply_cli_overrides
+      return unless @config
+    end
+    
     def validate_config(command_definition)
       # Basic validation - check required fields
       requirements = command_definition[:requirements] || []
@@ -206,6 +211,10 @@ module Grot
       
       if requirements.include?(:port) && !@config.dig(:basic, :port)
         raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
+      end
+      
+      if requirements.include?(:sketch_path) && !@config.dig(:basic, :sketch_path)
+        raise Grot::Errors::ConfigurationError, "Sketch directory path not specified in config"
       end
     end
     
