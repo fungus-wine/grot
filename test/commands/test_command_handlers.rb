@@ -152,9 +152,7 @@ class TestCommandHandlers < Minitest::Test
     fqbn = 'arduino:avr:uno'
     config = {
       basic: { cli_path: 'arduino-cli', fqbn: fqbn, port: '/dev/ttyACM0' },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000, auto_start_logging: false, log_directory: './log' }
+      interface: { baud_rate: 9600 }
     }
 
     strategy = mock('strategy')
@@ -177,9 +175,7 @@ class TestCommandHandlers < Minitest::Test
 
     config = {
       basic: { cli_path: 'arduino-cli', fqbn: 'bogus:bogus:bogus' },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 }
+      interface: { baud_rate: 9600 }
     }
 
     output = capture_stdout do
@@ -196,9 +192,7 @@ class TestCommandHandlers < Minitest::Test
 
     config = {
       basic: { cli_path: 'arduino-cli' },
-      interface: { baud_rate: -1 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 }
+      interface: { baud_rate: -1 }
     }
 
     output = capture_stdout do
@@ -209,25 +203,6 @@ class TestCommandHandlers < Minitest::Test
     assert_includes output, "baud_rate"
   end
 
-  def test_validate_command_invalid_buffer_size_returns_error
-    app = mock('app')
-    app.expects(:options).returns({ config_file: '.grotconfig' })
-
-    config = {
-      basic: { cli_path: 'arduino-cli' },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 0 },
-      monitor: { buffer_size: 10000 }
-    }
-
-    output = capture_stdout do
-      result = Grot::Commands::Handlers.validate_command(app, config)
-      assert_equal 1, result
-    end
-
-    assert_includes output, "buffer_size"
-  end
-
   def test_validate_command_unknown_section_warns
     app = mock('app')
     app.expects(:options).returns({ config_file: '.grotconfig' })
@@ -236,8 +211,6 @@ class TestCommandHandlers < Minitest::Test
     config = {
       basic: { cli_path: 'arduino-cli', fqbn: fqbn, port: '/dev/ttyACM0' },
       interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 },
       unknown_section: { foo: 'bar' }
     }
 
@@ -262,8 +235,6 @@ class TestCommandHandlers < Minitest::Test
     config = {
       basic: { cli_path: 'arduino-cli' },
       interface: { baud_rate: -1 },
-      plotter: { buffer_size: 0 },
-      monitor: { buffer_size: -5 },
       esp32_options: { frequency: 999 }
     }
 
@@ -273,8 +244,6 @@ class TestCommandHandlers < Minitest::Test
     end
 
     assert_includes output, "baud_rate"
-    assert_includes output, "plotter.buffer_size"
-    assert_includes output, "monitor.buffer_size"
     assert_includes output, "frequency"
   end
 
@@ -285,8 +254,6 @@ class TestCommandHandlers < Minitest::Test
     config = {
       basic: { cli_path: 'arduino-cli' },
       interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 },
       esp32_options: { frequency: 100 }
     }
 
@@ -304,9 +271,7 @@ class TestCommandHandlers < Minitest::Test
 
     config = {
       basic: { cli_path: 'arduino-cli', port: '/dev/ttyACM0' },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 }
+      interface: { baud_rate: 9600 }
     }
 
     output = capture_stdout do
@@ -324,9 +289,7 @@ class TestCommandHandlers < Minitest::Test
     fqbn = 'arduino:avr:uno'
     config = {
       basic: { cli_path: 'arduino-cli', fqbn: fqbn },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 }
+      interface: { baud_rate: 9600 }
     }
 
     strategy = mock('strategy')
@@ -350,9 +313,7 @@ class TestCommandHandlers < Minitest::Test
     fqbn = 'arduino:avr:uno'
     config = {
       basic: { cli_path: 'arduino-cli', fqbn: fqbn },
-      interface: { baud_rate: 9600 },
-      plotter: { buffer_size: 500 },
-      monitor: { buffer_size: 10000 }
+      interface: { baud_rate: 9600 }
     }
 
     strategy = mock('strategy')

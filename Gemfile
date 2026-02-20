@@ -1,7 +1,5 @@
 source 'https://rubygems.org'
 
-gem 'rubyserial', '~> 0.6'
-gem 'gosu', '~> 1.4', '>= 1.4.6'
 gem 'toml-rb', '~> 2.2'
 
 group :development, :test do

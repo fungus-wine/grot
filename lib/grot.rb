@@ -30,42 +30,6 @@ require "grot/commands/command_handlers"
 # Hardware-related requires
 require "grot/ports/port_handler"
 
-# Keyboard system
-require 'grot/keyboard/key_event'
-require 'grot/keyboard/module_base'
-require 'grot/keyboard/module_registry'
-require 'grot/keyboard/event_bus'
-require 'grot/keyboard/key_constants'
-require 'grot/keyboard/keyboard_manager'
-require 'grot/keyboard/module_provider'
-
-require 'grot/keyboard/providers/key_state_provider'
-require 'grot/keyboard/providers/stuck_key_fixer_provider'
-require 'grot/keyboard/providers/mac_adapter_provider'
-require 'grot/keyboard/providers/buffer_provider'
-require 'grot/keyboard/providers/debouncer_provider'
-
-require 'grot/keyboard/modules/key_state_module'
-require 'grot/keyboard/modules/stuck_key_fixer_module'
-require 'grot/keyboard/modules/mac_adapter_module'
-require 'grot/keyboard/modules/buffer_module'
-require 'grot/keyboard/modules/debouncer_module'
-
-# Interface modules
-require 'grot/interfaces/base_interface'
-require 'grot/interfaces/monitor_interface'
-require 'grot/interfaces/plotter_interface'
-
-require 'grot/interfaces/utils/drawing_kit'
-require 'grot/interfaces/utils/theme_manager'
-
-require 'grot/interfaces/components/command_bar'
-require 'grot/interfaces/components/plotter_component'
-
-require 'grot/interfaces/models/serial_connection'
-require 'grot/interfaces/models/serial_data_parser'
-require 'grot/interfaces/models/data_buffer_manager'
-
 # Main app class
 require "grot/app"
 

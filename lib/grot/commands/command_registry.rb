@@ -53,16 +53,6 @@ module Grot
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: "upload"
         },
-        "monitor" => {
-          description: "Open serial monitor",
-          requirements: [:config, :port],
-          action: ->(app, config) { Commands::Handlers.monitor_command(app, config) }
-        },
-        "plotter" => {
-          description: "Open serial plotter",
-          requirements: [:config, :port],
-          action: ->(app, config) { Commands::Handlers.plotter_command(app, config) }
-        },
         "validate" => {
           description: "Validate configuration file",
           requirements: [:config],

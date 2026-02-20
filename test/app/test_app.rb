@@ -26,18 +26,18 @@ class TestApp < Minitest::Test
       description: 'Real-time output command',
       real_time_output: true
     }
-    
+
     Grot::Commands::CommandRegistry.expects(:get_command)
-      .with('monitor').returns(command_definition)
-    
+      .with('load').returns(command_definition)
+
     @app.expects(:execute_with_real_time_output).with('test command')
     @app.expects(:puts).at_least(0)
     @app.expects(:print).at_least(0)
     @app.expects(:colorize).returns("colored output").at_least(0)
-    
-    @app.send(:execute_cli_command, 'monitor', 'test command')
+
+    @app.send(:execute_cli_command, 'load', 'test command')
   end
-  
+
   def test_execute_cli_command_with_spinner
     # Create command definition with spinner_message
     command_definition = {

@@ -23,9 +23,7 @@ Grot is a Ruby gem that provides a command-line tool for Arduino development wit
 1. **App Class** (`lib/grot/app.rb`) - Main application entry point that orchestrates command execution
 2. **Command System** - Registry-based command handling with pre/post actions and spinners
 3. **Board Strategy Pattern** - Extensible board-specific handling via strategy classes
-4. **Interface System** - Gosu-based GUI interfaces for monitor and plotter
-5. **Keyboard Manager** - Modular keyboard input handling with event bus architecture
-6. **Configuration System** - TOML-based configuration with defaults and validation
+4. **Configuration System** - TOML-based configuration with defaults and validation
 
 ### Key Architectural Patterns
 
@@ -43,42 +41,15 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - Board mapping defined in `BoardRegistry`
 - Supports: default, giga, esp32_s3 strategies
 
-#### Modular Keyboard System
-- `KeyboardManager` orchestrates input handling
-- `ModuleRegistry` manages keyboard modules
-- `EventBus` handles inter-module communication
-- Modules: key_state, stuck_key_fixer, mac_adapter, buffer, debouncer
-
-#### Interface Architecture
-- `BaseInterface` provides common Gosu window functionality
-- `MonitorInterface` - Serial monitor with text display, logging, and bookmarks
-- `PlotterInterface` - Real-time data plotting with multiple series support
-- `StatusBar` - Reusable status component showing connection, logging, and data rate
-- `CommandBar` and `HelpDialog` - Shared UI components
-- Models handle serial communication, data parsing, and buffer management
-
 ### Key Dependencies
-- `gosu` - GUI framework for interfaces
-- `rubyserial` - Serial port communication
 - `toml-rb` - Configuration file parsing
 - `minitest` + `mocha` - Testing framework
 
 ### Configuration
 - Default config file: `.grotconfig` in current directory
 - Global config file: `~/.config/grot/.grotconfig`
-- Config categories: board, keyboard, interface, monitor, plotter, theme
-- Monitor config: auto_start_logging, log_directory (default: "./log")
-- Plotter config: buffer_size (default: 500)
+- Config categories: board, interface
 - Hierarchical defaults system with registry-based lookups
-
-### Serial Monitor Features
-- **Real-time Text Display**: UTF-8 compatible text rendering with scrolling
-- **Logging System**: Sequential log files (monitor_1.log, monitor_2.log) with timestamps
-- **Bookmarks**: Insertable markers for easy log navigation (B key, cyan display)
-- **Status Bar**: Real-time connection, logging, pause, and timestamp status
-- **Keyboard Shortcuts**: Space (pause), T (timestamps), L (logging), C (clear), H (help)
-- **Command Input**: Send commands to Arduino via Tab key activation
-- **Arduino IDE Compatibility**: Full UTF-8, line ending, and data format support
 
 ### Test Structure
 - Tests use Minitest with Mocha for mocking

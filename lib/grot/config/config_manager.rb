@@ -56,7 +56,6 @@ module Grot
         validate_string(config, :basic, :sketch_path)
         validate_string(config, :giga_options, :target_core)
         validate_string(config, :esp32_options, :core_config)
-        validate_string(config, :monitor, :log_directory)
         validate_string(config, :interface, :logs_directory)
 
         # Keep the useful FQBN validation
@@ -66,8 +65,6 @@ module Grot
 
         # Simple type coercion for key fields
         coerce_integer(config, :interface, :baud_rate)
-        coerce_integer(config, :plotter, :buffer_size)
-        coerce_integer(config, :monitor, :buffer_size)
         coerce_integer(config, :esp32_options, :frequency)
         coerce_float(config, :giga_options, :flash_split)
       end
@@ -167,12 +164,6 @@ module Grot
           baud_rate = #{DEFAULTS[:interface][:baud_rate]}
           logs_directory = "#{DEFAULTS[:interface][:logs_directory]}"
           
-          [plotter]
-          buffer_size = #{DEFAULTS[:plotter][:buffer_size]}  # Number of data points to keep in memory
-          
-          [monitor]
-          buffer_size = #{DEFAULTS[:monitor][:buffer_size]}  # Serial monitor buffer size
-          
           # Board-specific configuration options
           # These sections are only needed for specific boards and are otherwise ignored
           
@@ -185,40 +176,6 @@ module Grot
           # Options for ESP32-S3 boards
           # core_config = "#{DEFAULTS[:esp32_options][:core_config]}"    # Core usage: "dual", "single-0", "single-1"
           # frequency = #{DEFAULTS[:esp32_options][:frequency]}          # CPU frequency in MHz: 80, 160, or 240
-          
-          # Keyboard handling configuration
-          # Advanced options for keyboard input in GUI interfaces
-          
-          [keyboard_key_state]
-          enabled = #{DEFAULTS[:keyboard_key_state][:enabled]}
-          priority = #{DEFAULTS[:keyboard_key_state][:priority]}
-          
-          [keyboard_stuck_key_fixer]
-          enabled = #{DEFAULTS[:keyboard_stuck_key_fixer][:enabled]}
-          priority = #{DEFAULTS[:keyboard_stuck_key_fixer][:priority]}
-          auto_release_delay = #{DEFAULTS[:keyboard_stuck_key_fixer][:auto_release_delay]}
-          
-          [keyboard_mac_adapter]
-          enabled = #{DEFAULTS[:keyboard_mac_adapter][:enabled]}       # Auto-enabled on macOS
-          priority = #{DEFAULTS[:keyboard_mac_adapter][:priority]}
-          command_fix = #{DEFAULTS[:keyboard_mac_adapter][:command_fix]}
-          auto_fix_stuck_modifiers = #{DEFAULTS[:keyboard_mac_adapter][:auto_fix_stuck_modifiers]}
-          
-          [keyboard_linux_adapter]
-          enabled = #{DEFAULTS[:keyboard_linux_adapter][:enabled]}     # Auto-enabled on Linux
-          priority = #{DEFAULTS[:keyboard_linux_adapter][:priority]}
-          fix_window_manager_conflicts = #{DEFAULTS[:keyboard_linux_adapter][:fix_window_manager_conflicts]}
-          
-          [keyboard_debouncer]
-          enabled = #{DEFAULTS[:keyboard_debouncer][:enabled]}
-          priority = #{DEFAULTS[:keyboard_debouncer][:priority]}
-          repeat_delay = #{DEFAULTS[:keyboard_debouncer][:repeat_delay]}
-          repeat_rate = #{DEFAULTS[:keyboard_debouncer][:repeat_rate]}
-          
-          [keyboard_buffer]
-          enabled = #{DEFAULTS[:keyboard_buffer][:enabled]}
-          priority = #{DEFAULTS[:keyboard_buffer][:priority]}
-          buffer_time = #{DEFAULTS[:keyboard_buffer][:buffer_time]}
         TOML
       end
     end

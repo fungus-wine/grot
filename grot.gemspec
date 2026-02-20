@@ -26,9 +26,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "rubyserial", "~> 0.6"
   spec.add_dependency "toml-rb", "~> 2.2"
-  spec.add_dependency "gosu", "~> 1.0"
 
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"

@@ -112,60 +112,6 @@ module Grot
         status.exitstatus
       end
 
-      def self.monitor_command(app, config)
-        begin
-          require 'grot/interfaces/monitor_interface'
-          
-          # Validate required config
-          unless config.dig(:basic, :port)
-            raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
-          end
-          
-          # Launch monitor window
-          window = Grot::Interfaces::MonitorInterface.new(config)
-          window.show
-          
-          return 0
-
-        rescue Grot::Errors::ConfigurationError => e
-          error "Configuration error: #{e.message}"
-          info "Specify a serial port in your config file."
-          return 1
-        rescue => e
-          error "Error starting monitor: #{e.message}"
-          return 1
-        end
-      end
-
-      def self.plotter_command(app, config)
-        begin
-          require 'grot/interfaces/plotter_interface'
-
-          # Validate required config
-          unless config.dig(:basic, :port)
-            raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
-          end
-
-          # Launch plotter window
-          window = Grot::Interfaces::PlotterInterface.new(config)
-          window.show
-
-          return 0
-
-        rescue Grot::Errors::ConfigurationError => e
-          error "Configuration error: #{e.message}"
-          info "Specify a serial port in your config file."
-          return 1
-        rescue LoadError => e
-          error "Missing dependency: #{e.message}"
-          info "Make sure you have the gosu gem installed: gem install gosu"
-          return 1
-        rescue => e
-          error "Error starting plotter: #{e.message}"
-          return 1
-        end
-      end
-
       def self.validate_command(app, config)
         require 'grot/config/defaults'
         require 'grot/boards/board_registry'
@@ -192,13 +138,6 @@ module Grot
           errors << "interface.baud_rate must be greater than 0 (got #{baud_rate})"
         end
 
-        [:plotter, :monitor].each do |section|
-          buf = config.dig(section, :buffer_size)
-          if buf && buf.is_a?(Integer) && buf <= 0
-            errors << "#{section}.buffer_size must be greater than 0 (got #{buf})"
-          end
-        end
-
         flash_split = config.dig(:giga_options, :flash_split)
         if flash_split && (flash_split < 0.0 || flash_split > 1.0)
           errors << "giga_options.flash_split must be between 0.0 and 1.0 (got #{flash_split})"
@@ -218,7 +157,7 @@ module Grot
         fqbn = config.dig(:basic, :fqbn)
         port = config.dig(:basic, :port)
         errors << "basic.fqbn is not set - run 'grot boards' to see supported boards" unless fqbn
-        warnings << "basic.port is not set - required for monitor, plotter, and upload" unless port
+        warnings << "basic.port is not set - required for upload" unless port
 
         # FQBN and board-specific validation
         if fqbn
