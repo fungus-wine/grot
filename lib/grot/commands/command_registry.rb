@@ -62,6 +62,11 @@ module Grot
           description: "Open serial plotter",
           requirements: [:config, :port],
           action: ->(app, config) { Commands::Handlers.plotter_command(app, config) }
+        },
+        "validate" => {
+          description: "Validate configuration file",
+          requirements: [:config],
+          action: ->(app, config) { Commands::Handlers.validate_command(app, config) }
         }
       }.freeze
       

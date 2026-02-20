@@ -49,11 +49,21 @@ module Grot
       end
       
       def self.validate_and_coerce(config)
+        # String type validation (must run before fqbn validation to avoid cryptic crashes)
+        validate_string(config, :basic, :fqbn)
+        validate_string(config, :basic, :port)
+        validate_string(config, :basic, :cli_path)
+        validate_string(config, :basic, :sketch_path)
+        validate_string(config, :giga_options, :target_core)
+        validate_string(config, :esp32_options, :core_config)
+        validate_string(config, :monitor, :log_directory)
+        validate_string(config, :interface, :logs_directory)
+
         # Keep the useful FQBN validation
         if config.dig(:basic, :fqbn)
           validate_fqbn(config[:basic][:fqbn])
         end
-        
+
         # Simple type coercion for key fields
         coerce_integer(config, :interface, :baud_rate)
         coerce_integer(config, :plotter, :buffer_size)
@@ -62,6 +72,14 @@ module Grot
         coerce_float(config, :giga_options, :flash_split)
       end
       
+      def self.validate_string(config, section, key)
+        value = config.dig(section, key)
+        return unless value
+        unless value.is_a?(String)
+          raise "#{section}.#{key} must be a string, got: #{value.inspect} (#{value.class.name})"
+        end
+      end
+
       def self.coerce_integer(config, section, key)
         value = config.dig(section, key)
         return unless value
@@ -95,7 +113,7 @@ module Grot
       end
       
       def self.find_similar_boards(fqbn)
-        return [] unless fqbn
+        return [] unless fqbn.is_a?(String)
         
         if fqbn.include?(':')
           vendor = fqbn.split(':').first

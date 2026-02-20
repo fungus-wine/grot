@@ -140,16 +140,16 @@ module Grot
       def self.plotter_command(app, config)
         begin
           require 'grot/interfaces/plotter_interface'
-          
+
           # Validate required config
           unless config.dig(:basic, :port)
             raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
           end
-          
+
           # Launch plotter window
           window = Grot::Interfaces::PlotterInterface.new(config)
           window.show
-          
+
           return 0
 
         rescue Grot::Errors::ConfigurationError => e
@@ -163,6 +163,88 @@ module Grot
         rescue => e
           error "Error starting plotter: #{e.message}"
           return 1
+        end
+      end
+
+      def self.validate_command(app, config)
+        require 'grot/config/defaults'
+        require 'grot/boards/board_registry'
+        require 'grot/boards/board_strategy_factory'
+
+        errors = []
+        warnings = []
+
+        config_file = app.options[:config_file]
+        puts "Validating #{config_file}..."
+        separator
+
+        # Warn on unrecognized top-level sections
+        known_sections = Grot::Config::DEFAULTS.keys
+        config.each_key do |section|
+          unless known_sections.include?(section)
+            warnings << "Unknown configuration section: [#{section}]"
+          end
+        end
+
+        # Value range checks (types already coerced by ConfigManager on load)
+        baud_rate = config.dig(:interface, :baud_rate)
+        if baud_rate && baud_rate.is_a?(Integer) && baud_rate <= 0
+          errors << "interface.baud_rate must be greater than 0 (got #{baud_rate})"
+        end
+
+        [:plotter, :monitor].each do |section|
+          buf = config.dig(section, :buffer_size)
+          if buf && buf.is_a?(Integer) && buf <= 0
+            errors << "#{section}.buffer_size must be greater than 0 (got #{buf})"
+          end
+        end
+
+        flash_split = config.dig(:giga_options, :flash_split)
+        if flash_split && (flash_split < 0.0 || flash_split > 1.0)
+          errors << "giga_options.flash_split must be between 0.0 and 1.0 (got #{flash_split})"
+        end
+
+        freq = config.dig(:esp32_options, :frequency)
+        if freq && ![80, 160, 240].include?(freq)
+          errors << "esp32_options.frequency must be one of [80, 160, 240] (got #{freq})"
+        end
+
+        target_core = config.dig(:giga_options, :target_core)
+        if target_core && !["CM4", "CM7"].include?(target_core)
+          errors << "giga_options.target_core must be 'CM4' or 'CM7' (got '#{target_core}')"
+        end
+
+        # Required field checks
+        fqbn = config.dig(:basic, :fqbn)
+        port = config.dig(:basic, :port)
+        errors << "basic.fqbn is not set - run 'grot boards' to see supported boards" unless fqbn
+        warnings << "basic.port is not set - required for monitor, plotter, and upload" unless port
+
+        # FQBN and board-specific validation
+        if fqbn
+          if Grot::Boards::BoardRegistry.supported?(fqbn)
+            # Merge fqbn to top level so factory can find the right strategy
+            strategy_config = config.merge(fqbn: fqbn)
+            strategy = Grot::Boards::BoardStrategyFactory.create_strategy(strategy_config)
+            begin
+              strategy.validate_config
+            rescue => e
+              errors << e.message
+            end
+          else
+            errors << "Unknown FQBN '#{fqbn}' - run 'grot boards' to see supported boards"
+          end
+        end
+
+        # Report all warnings and errors
+        warnings.each { |w| warning w }
+        errors.each { |e| error e }
+
+        if errors.empty?
+          success warnings.empty? ? "Configuration is valid!" : "Configuration is valid (with warnings)."
+          0
+        else
+          1
         end
       end
 

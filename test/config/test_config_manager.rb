@@ -121,6 +121,35 @@ class TestConfigManager < Minitest::Test
     assert_equal 500, config.dig(:plotter, :buffer_size)
   end
 
+  def test_non_string_fqbn_raises_friendly_error
+    @temp_config_file.write(<<~TOML)
+      [basic]
+      fqbn = 6
+    TOML
+    @temp_config_file.close
+
+    error = assert_raises(RuntimeError) do
+      Grot::Config::ConfigManager.load_config(@temp_config_file.path)
+    end
+
+    assert_match(/basic\.fqbn must be a string/, error.message)
+    assert_match(/Integer/, error.message)
+  end
+
+  def test_non_string_port_raises_friendly_error
+    @temp_config_file.write(<<~TOML)
+      [basic]
+      port = true
+    TOML
+    @temp_config_file.close
+
+    error = assert_raises(RuntimeError) do
+      Grot::Config::ConfigManager.load_config(@temp_config_file.path)
+    end
+
+    assert_match(/basic\.port must be a string/, error.message)
+  end
+
   def test_deep_merge
     # Write a config that partially overrides nested structures
     @temp_config_file.write(<<~TOML)

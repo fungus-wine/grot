@@ -1,10 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-Grot is a Ruby gem that provides a command-line tool for Arduino development with arduino-cli integration. It offers serial monitoring, plotting, and Arduino board management capabilities with a Gosu-based GUI for interactive interfaces.
+Grot is a Ruby gem that provides a command-line tool for Arduino development with arduino-cli integration.
 
 ## Development Commands
 

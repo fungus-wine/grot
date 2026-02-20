@@ -128,18 +128,245 @@ class TestCommandHandlers < Minitest::Test
   
   def test_clean_command
     app = mock('app')
-    config = {basic: {cli_path: "arduino-cli"}} 
-    
+    config = {basic: {cli_path: "arduino-cli"}}
+
     Open3.expects(:capture3).with('arduino-cli cache clean')
       .returns(['Output', '', mock(success?: true, exitstatus: 0)])
-    
+
     app.expects(:instance_variable_set)
-    
+
     output = capture_stdout do
       result = Grot::Commands::Handlers.clean_command(app, config)
       assert_equal 0, result
     end
-    
+
     assert_includes output, "Output"
+  end
+
+  # validate_command tests
+
+  def test_validate_command_valid_config
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    fqbn = 'arduino:avr:uno'
+    config = {
+      basic: { cli_path: 'arduino-cli', fqbn: fqbn, port: '/dev/ttyACM0' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000, auto_start_logging: false, log_directory: './log' }
+    }
+
+    strategy = mock('strategy')
+    strategy.expects(:validate_config)
+    Grot::Boards::BoardStrategyFactory.expects(:create_strategy)
+      .with(config.merge(fqbn: fqbn))
+      .returns(strategy)
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 0, result
+    end
+
+    assert_includes output, "Configuration is valid!"
+  end
+
+  def test_validate_command_unknown_fqbn_returns_error
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli', fqbn: 'bogus:bogus:bogus' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "bogus:bogus:bogus"
+  end
+
+  def test_validate_command_invalid_baud_rate_returns_error
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli' },
+      interface: { baud_rate: -1 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "baud_rate"
+  end
+
+  def test_validate_command_invalid_buffer_size_returns_error
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 0 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "buffer_size"
+  end
+
+  def test_validate_command_unknown_section_warns
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    fqbn = 'arduino:avr:uno'
+    config = {
+      basic: { cli_path: 'arduino-cli', fqbn: fqbn, port: '/dev/ttyACM0' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 },
+      unknown_section: { foo: 'bar' }
+    }
+
+    strategy = mock('strategy')
+    strategy.expects(:validate_config)
+    Grot::Boards::BoardStrategyFactory.expects(:create_strategy)
+      .with(config.merge(fqbn: fqbn))
+      .returns(strategy)
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 0, result
+    end
+
+    assert_includes output, "unknown_section"
+  end
+
+  def test_validate_command_reports_all_errors
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli' },
+      interface: { baud_rate: -1 },
+      plotter: { buffer_size: 0 },
+      monitor: { buffer_size: -5 },
+      esp32_options: { frequency: 999 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "baud_rate"
+    assert_includes output, "plotter.buffer_size"
+    assert_includes output, "monitor.buffer_size"
+    assert_includes output, "frequency"
+  end
+
+  def test_validate_command_invalid_esp32_frequency
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 },
+      esp32_options: { frequency: 100 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "frequency"
+  end
+
+  def test_validate_command_missing_fqbn_returns_error
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    config = {
+      basic: { cli_path: 'arduino-cli', port: '/dev/ttyACM0' },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 1, result
+    end
+
+    assert_includes output, "basic.fqbn is not set"
+  end
+
+  def test_validate_command_missing_port_returns_warning
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    fqbn = 'arduino:avr:uno'
+    config = {
+      basic: { cli_path: 'arduino-cli', fqbn: fqbn },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    strategy = mock('strategy')
+    strategy.expects(:validate_config)
+    Grot::Boards::BoardStrategyFactory.expects(:create_strategy)
+      .with(config.merge(fqbn: fqbn))
+      .returns(strategy)
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 0, result
+    end
+
+    assert_includes output, "basic.port is not set"
+  end
+
+  def test_validate_command_valid_fqbn_runs_board_strategy
+    app = mock('app')
+    app.expects(:options).returns({ config_file: '.grotconfig' })
+
+    fqbn = 'arduino:avr:uno'
+    config = {
+      basic: { cli_path: 'arduino-cli', fqbn: fqbn },
+      interface: { baud_rate: 9600 },
+      plotter: { buffer_size: 500 },
+      monitor: { buffer_size: 10000 }
+    }
+
+    strategy = mock('strategy')
+    strategy.expects(:validate_config)
+
+    Grot::Boards::BoardStrategyFactory.expects(:create_strategy)
+      .with(config.merge(fqbn: fqbn))
+      .returns(strategy)
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.validate_command(app, config)
+      assert_equal 0, result
+    end
+
+    assert_includes output, "Configuration is valid"
   end
 end
