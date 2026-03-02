@@ -2,6 +2,8 @@
 
 Grot is a command line tool that wraps the `arduino-cli` library. It sports simple configuration driven commands for building and uploading Arduino sketches.
 
+Grot also uses `teensy_loader_cli` to support Teensy boards.
+
 Grot was born out of frustration with the overly simple Arduino IDE, a dislike of Visual Studio, and my old school Ruby roots (text editors and command lines!). In other words I wanted a simple command line tool with commands that I can actually remember.
 
 ## Project Status

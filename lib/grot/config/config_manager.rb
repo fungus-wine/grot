@@ -57,6 +57,7 @@ module Grot
         validate_string(config, :giga_options, :target_core)
         validate_string(config, :giga_options, :split)
         validate_string(config, :interface, :logs_directory)
+        validate_string(config, :teensy, :loader_path)
 
         # Keep the useful FQBN validation
         if config.dig(:basic, :fqbn)
@@ -160,6 +161,10 @@ module Grot
           # Options for Arduino GIGA R1 WiFi boards (appended to FQBN during compile/upload)
           # target_core = "#{DEFAULTS[:giga_options][:target_core]}"     # Target processor core: "cm4" or "cm7"
           # split = "#{DEFAULTS[:giga_options][:split]}"                 # Flash split: "100_0", "75_25", or "50_50"
+
+          [teensy]
+          # Options for Teensy boards (upload uses teensy_loader_cli instead of arduino-cli)
+          # loader_path = "#{DEFAULTS[:teensy][:loader_path]}"           # Path to teensy_loader_cli binary
         TOML
       end
     end

@@ -128,11 +128,12 @@ class TestCommandHandlers < Minitest::Test
 
   def test_clean_command
     app = mock('app')
-    config = {basic: {cli_path: "arduino-cli"}}
+    config = {basic: {cli_path: "arduino-cli", sketch_path: "/tmp/sketch"}}
 
     Open3.expects(:capture3).with('arduino-cli cache clean')
       .returns(['Output', '', mock(success?: true, exitstatus: 0)])
 
+    Dir.expects(:exist?).with('/tmp/sketch/build').returns(false)
     app.expects(:instance_variable_set)
 
     output = capture_stdout do
@@ -141,6 +142,25 @@ class TestCommandHandlers < Minitest::Test
     end
 
     assert_includes output, "Output"
+  end
+
+  def test_clean_command_removes_build_directory
+    app = mock('app')
+    config = {basic: {cli_path: "arduino-cli", sketch_path: "/tmp/sketch"}}
+
+    Open3.expects(:capture3).with('arduino-cli cache clean')
+      .returns(['', '', mock(success?: true, exitstatus: 0)])
+
+    Dir.expects(:exist?).with('/tmp/sketch/build').returns(true)
+    FileUtils.expects(:rm_rf).with('/tmp/sketch/build')
+    app.expects(:instance_variable_set)
+
+    output = capture_stdout do
+      result = Grot::Commands::Handlers.clean_command(app, config)
+      assert_equal 0, result
+    end
+
+    assert_includes output, "Removed build directory"
   end
 
   # validate_command tests

@@ -5,6 +5,7 @@ require "grot/boards/board_registry"
 require "grot/cli/colorator"
 require "grot/cli/progress_display"
 require "open3"
+require "fileutils"
 
 module Grot
   module Commands
@@ -106,6 +107,16 @@ module Grot
           error "Cache cleaning failed with exit code: #{status.exitstatus}"
         end
 
+        # Remove exported build artifacts
+        sketch_path = config[:basic][:sketch_path]
+        if sketch_path
+          build_dir = File.join(sketch_path, "build")
+          if Dir.exist?(build_dir)
+            FileUtils.rm_rf(build_dir)
+            info "Removed build directory: #{build_dir}\n"
+          end
+        end
+
         # Store the executed command in app for the post_action
         app.instance_variable_set(:@last_executed_command, cmd)
 
@@ -156,6 +167,12 @@ module Grot
         # FQBN validation
         if fqbn && !Grot::Boards::BoardRegistry.supported?(fqbn)
           errors << "Unknown FQBN '#{fqbn}' - run 'grot boards' to see supported boards"
+        end
+
+        # Teensy-specific checks
+        if fqbn && Grot::Boards::BoardRegistry.loader_for(fqbn) == :teensy_loader_cli
+          loader_path = config.dig(:teensy, :loader_path)
+          warnings << "teensy.loader_path is not set (using default 'teensy_loader_cli')" unless loader_path
         end
 
         # Report all warnings and errors

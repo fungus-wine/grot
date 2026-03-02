@@ -26,9 +26,9 @@ module Grot
           action: ->(app) { Commands::Handlers.boards_command(app) }
         },
         "clean" => {
-          description: "Clean arduino-cli cache",
-          requirements: [:config],
-          spinner_message: "Cleaning cache",
+          description: "Clean arduino-cli cache and build artifacts",
+          requirements: [:config, :sketch_path],
+          spinner_message: "Cleaning cache and build artifacts",
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: ->(app, config) { Commands::Handlers.clean_command(app, config) }
         },

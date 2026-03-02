@@ -82,9 +82,44 @@ module Grot
         },
         'esp32:esp32:esp32s3-octal' => {
           name: 'ESP32S3 Dev Module Octal (WROOM2)'
-        }
+        },
 
-        # Add new boards here following the pattern above
+        # Teensy boards (compile with arduino-cli, upload with teensy_loader_cli)
+        'teensy:avr:teensy41' => {
+          name: 'Teensy 4.1',
+          loader: :teensy_loader_cli,
+          mcu: 'TEENSY41'
+        },
+        'teensy:avr:teensy40' => {
+          name: 'Teensy 4.0',
+          loader: :teensy_loader_cli,
+          mcu: 'TEENSY40'
+        },
+        'teensy:avr:teensyMM' => {
+          name: 'Teensy MicroMod',
+          loader: :teensy_loader_cli,
+          mcu: 'TEENSY_MICROMOD'
+        },
+        'teensy:avr:teensy36' => {
+          name: 'Teensy 3.6',
+          loader: :teensy_loader_cli,
+          mcu: 'MK66FX1M0'
+        },
+        'teensy:avr:teensy35' => {
+          name: 'Teensy 3.5',
+          loader: :teensy_loader_cli,
+          mcu: 'MK64FX512'
+        },
+        'teensy:avr:teensy31' => {
+          name: 'Teensy 3.2/3.1',
+          loader: :teensy_loader_cli,
+          mcu: 'MK20DX256'
+        },
+        'teensy:avr:teensyLC' => {
+          name: 'Teensy LC',
+          loader: :teensy_loader_cli,
+          mcu: 'MKL26Z64'
+        }
       }.freeze
 
       # Returns a hash of all supported boards with their details
@@ -105,6 +140,12 @@ module Grot
       # Check if a board is supported
       def self.supported?(fqbn)
         supported_boards.key?(fqbn)
+      end
+
+      # Returns the loader type for a board, or nil for standard arduino-cli upload
+      def self.loader_for(fqbn)
+        info = get_board_info(fqbn)
+        info && info[:loader]
       end
 
       # Get the FQBN options spec for a given board

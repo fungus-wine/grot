@@ -16,11 +16,10 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "source_code_uri" => "https://github.com/fungus-wine/grot",
-    "changelog_uri" => "https://github.com/fungus-wine/blob/main/CHANGELOG.md",
     "rubygems_mfa_required" => "true"
   }
 
-  spec.files = Dir.glob("{bin,lib}/**/*") + %w[LICENSE.md README.md CHANGELOG.md]
+  spec.files = Dir.glob("{bin,lib}/**/*") + %w[LICENSE.md README.md]
   spec.bindir = "exe"
   spec.executables = ["grot"]
   spec.require_paths = ["lib"]

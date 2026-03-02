@@ -18,7 +18,7 @@ class TestConfigManager < Minitest::Test
     config = Grot::Config::ConfigManager.load_config(nil)
 
     # Verify defaults are loaded
-    assert_equal 9600, config.dig(:interface, :baud_rate)
+    assert_equal 115200, config.dig(:interface, :baud_rate)
     assert_equal "arduino-cli", config.dig(:basic, :cli_path)
   end
 
@@ -95,7 +95,7 @@ class TestConfigManager < Minitest::Test
     config = Grot::Config::ConfigManager.load_config("/path/that/does/not/exist.toml")
 
     # Should still get defaults
-    assert_equal 9600, config.dig(:interface, :baud_rate)
+    assert_equal 115200, config.dig(:interface, :baud_rate)
   end
 
   def test_non_string_fqbn_raises_friendly_error
@@ -125,6 +125,25 @@ class TestConfigManager < Minitest::Test
     end
 
     assert_match(/basic\.port must be a string/, error.message)
+  end
+
+  def test_teensy_defaults_loaded
+    config = Grot::Config::ConfigManager.load_config(nil)
+    assert_equal "teensy_loader_cli", config.dig(:teensy, :loader_path)
+  end
+
+  def test_non_string_teensy_loader_path_raises_error
+    @temp_config_file.write(<<~TOML)
+      [teensy]
+      loader_path = 42
+    TOML
+    @temp_config_file.close
+
+    error = assert_raises(RuntimeError) do
+      Grot::Config::ConfigManager.load_config(@temp_config_file.path)
+    end
+
+    assert_match(/teensy\.loader_path must be a string/, error.message)
   end
 
   def test_deep_merge

@@ -28,6 +28,31 @@ class TestBoardRegistry < Minitest::Test
     refute Grot::Boards::BoardRegistry.supported?('unknown:board:type')
   end
 
+  def test_teensy_boards_registered
+    teensy41 = Grot::Boards::BoardRegistry.get_board_info('teensy:avr:teensy41')
+    assert_kind_of Hash, teensy41
+    assert_equal 'Teensy 4.1', teensy41[:name]
+    assert_equal :teensy_loader_cli, teensy41[:loader]
+    assert_equal 'TEENSY41', teensy41[:mcu]
+
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensy40')
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensyMM')
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensy36')
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensy35')
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensy31')
+    assert Grot::Boards::BoardRegistry.supported?('teensy:avr:teensyLC')
+  end
+
+  def test_loader_for_teensy
+    assert_equal :teensy_loader_cli, Grot::Boards::BoardRegistry.loader_for('teensy:avr:teensy41')
+    assert_equal :teensy_loader_cli, Grot::Boards::BoardRegistry.loader_for('teensy:avr:teensyLC')
+  end
+
+  def test_loader_for_non_teensy
+    assert_nil Grot::Boards::BoardRegistry.loader_for('arduino:avr:uno')
+    assert_nil Grot::Boards::BoardRegistry.loader_for('unknown:board:type')
+  end
+
   def test_fqbn_options_for
     # GIGA board has fqbn_options
     options = Grot::Boards::BoardRegistry.fqbn_options_for('arduino:mbed_giga:giga')

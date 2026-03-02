@@ -2,6 +2,7 @@
 
 require "grot/boards/board_registry"
 require "grot/commands/command_registry"
+require "grot/errors"
 
 module Grot
   module Commands
@@ -14,10 +15,18 @@ module Grot
         # (these commands are handled by custom handlers)
         return "" unless command_definition && !command_definition[:action].is_a?(Proc)
 
+        action = command_definition[:action]
+        fqbn = config[:basic][:fqbn]
+
+        # Route Teensy uploads to teensy_loader_cli
+        if action == "upload" && fqbn && Boards::BoardRegistry.loader_for(fqbn) == :teensy_loader_cli
+          return build_teensy_load_command(config)
+        end
+
         # Start with base command
         cmd_parts = [
           config[:basic][:cli_path],
-          command_definition[:action]  # Use action instead of cli_action
+          action
         ]
 
         # Add sketch path if required (specified in command definition)
@@ -26,6 +35,9 @@ module Grot
 
         # Add standard options
         cmd_parts = add_standard_options(cmd_parts, config, command_definition)
+
+        # Add --export-binaries for compile commands
+        cmd_parts << "--export-binaries" if action == "compile"
 
         # Append board-specific FQBN options if needed
         requirements = command_definition[:requirements] || []
@@ -38,6 +50,26 @@ module Grot
       end
 
       private
+
+      def build_teensy_load_command(config)
+        fqbn = config[:basic][:fqbn]
+        sketch_path = config[:basic][:sketch_path]
+        board_info = Boards::BoardRegistry.get_board_info(fqbn)
+        mcu = board_info[:mcu]
+        loader_path = config.dig(:teensy, :loader_path) || "teensy_loader_cli"
+
+        # Find hex file in the export-binaries build directory
+        fqbn_dots = fqbn.tr(':', '.')
+        hex_pattern = File.join(sketch_path, "build", fqbn_dots, "*.hex")
+        hex_files = Dir.glob(hex_pattern)
+
+        if hex_files.empty?
+          raise Errors::CommandExecutionError, "No hex file found — run 'grot build' first"
+        end
+
+        hex_path = hex_files.first
+        "#{loader_path} --mcu=#{mcu} -w -v #{hex_path}"
+      end
 
       def add_standard_options(cmd_parts, config, command_definition)
         requirements = command_definition[:requirements] || []

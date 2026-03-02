@@ -12,6 +12,14 @@ module Grot
         logs_directory: "#{Dir.home}/grot_logs"
       },
 
+      giga_options: {
+        target_core: "cm7",
+        split: "100_0"
+      },
+
+      teensy: {
+        loader_path: "teensy_loader_cli"
+      }
     }.freeze
   end
 end
