@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Grot is a Ruby gem that provides a command-line tool for Arduino development with arduino-cli integration.
+Grot is a Ruby gem that provides a command-line tool for Arduino development with `arduino-cli` and `teensy_loader_cli` integration.
 
 ## Development Commands
 
@@ -22,8 +22,7 @@ Grot is a Ruby gem that provides a command-line tool for Arduino development wit
 
 1. **App Class** (`lib/grot/app.rb`) - Main application entry point that orchestrates command execution
 2. **Command System** - Registry-based command handling with pre/post actions and spinners
-3. **Board Strategy Pattern** - Extensible board-specific handling via strategy classes
-4. **Configuration System** - TOML-based configuration with defaults and validation
+3. **Configuration System** - TOML-based configuration with defaults and validation
 
 ### Key Architectural Patterns
 
@@ -34,12 +33,6 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - `spinner_message` - UI feedback configuration
 - `pre_action`/`post_action` - Hooks for command lifecycle
 - Board-specific behavior is implicit based on `:fqbn` requirement
-
-#### Board Strategy Factory
-- `BoardStrategyFactory` creates board-specific strategies
-- Strategies inherit from `BaseBoardStrategy`
-- Board mapping defined in `BoardRegistry`
-- Supports: default, giga, esp32_s3 strategies
 
 ### Key Dependencies
 - `toml-rb` - Configuration file parsing
@@ -57,5 +50,5 @@ Commands are defined in `CommandRegistry::COMMANDS` hash with metadata:
 - Tests organized by module/component
 - Coverage reports generated to `coverage/` directory
 
-# IMPORTANT: Never add Claude/Anthropic footers to commit messages
-  Do not add any "Generated with Claude Code" or "Co-Authored-By: Claude" footers to any commits. Keep commit messages clean and concise without AI attribution.
+# Notes
+- Don't make git commits or pushes.

@@ -4,130 +4,86 @@ module Grot
   module Boards
     # Registry of all supported boards with their configuration details
     class BoardRegistry
-      # Strategy-specific configuration templates
-      STRATEGY_TEMPLATES = {
-        # Default options for ESP32-S3 boards
-        'esp32_s3' => {
-          :core_config => 'dual',
-          :frequency => '240'
-        },
-        # Default options for GIGA boards
-        'giga' => {
-          :target_core => 'CM7',
-          :flash_split => 1.0
-        }
-      }.freeze
-
       # Board definitions
       # Organized by board type for easier maintenance
       BOARD_DEFINITIONS = {
         # Standard Arduino AVR boards
         'arduino:avr:uno' => {
-          name: 'Arduino Uno',
-          strategy: 'default'
+          name: 'Arduino Uno'
         },
         'arduino:avr:mega' => {
-          name: 'Arduino Mega or Mega 2560',
-          strategy: 'default'
+          name: 'Arduino Mega or Mega 2560'
         },
         'arduino:avr:nano' => {
-          name: 'Arduino Nano',
-          strategy: 'default'
+          name: 'Arduino Nano'
         },
         'arduino:avr:leonardo' => {
-          name: 'Arduino Leonardo',
-          strategy: 'default'
+          name: 'Arduino Leonardo'
         },
         'arduino:avr:micro' => {
-          name: 'Arduino Micro',
-          strategy: 'default'
+          name: 'Arduino Micro'
         },
         'arduino:avr:pro' => {
-          name: 'Arduino Pro or Pro Mini',
-          strategy: 'default'
+          name: 'Arduino Pro or Pro Mini'
         },
         'arduino:avr:lilypad' => {
-          name: 'LilyPad Arduino',
-          strategy: 'default'
+          name: 'LilyPad Arduino'
         },
         'arduino:avr:fio' => {
-          name: 'Arduino Fio',
-          strategy: 'default'
+          name: 'Arduino Fio'
         },
         'arduino:avr:ethernet' => {
-          name: 'Arduino Ethernet',
-          strategy: 'default'
+          name: 'Arduino Ethernet'
         },
-        
+
         # Arduino SAMD Boards
         'arduino:samd:arduino_zero_native' => {
-          name: 'Arduino Zero',
-          strategy: 'default'
+          name: 'Arduino Zero'
         },
         'arduino:samd:mkr1000' => {
-          name: 'Arduino MKR1000',
-          strategy: 'default'
+          name: 'Arduino MKR1000'
         },
         'arduino:samd:mkrzero' => {
-          name: 'Arduino MKRZero',
-          strategy: 'default'
+          name: 'Arduino MKRZero'
         },
-        
+
         # GIGA boards
         'arduino:mbed_giga:giga' => {
           name: 'Arduino Giga R1',
-          strategy: 'giga',
-          # Reference the template rather than duplicating values
-          config_options: STRATEGY_TEMPLATES['giga'].dup
+          fqbn_options: {
+            giga_options: { target_core: 'target_core', split: 'split' }
+          }
         },
-        
+
         # ESP32-S3 boards
         'esp32:esp32:adafruit_feather_esp32s3_reversetft' => {
-          name: 'Adafruit Feather ESP32-S3 Reverse TFT',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit Feather ESP32-S3 Reverse TFT'
         },
         'esp32:esp32:adafruit_qtpy_esp32s3_n4r2' => {
-          name: 'Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)'
         },
         'esp32:esp32:adafruit_feather_esp32s3' => {
-          name: 'Adafruit Feather ESP32-S3 2MB PSRAM',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit Feather ESP32-S3 2MB PSRAM'
         },
         'esp32:esp32:adafruit_feather_esp32s3_nopsram' => {
-          name: 'Adafruit Feather ESP32-S3 No PSRAM',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit Feather ESP32-S3 No PSRAM'
         },
         'esp32:esp32:adafruit_feather_esp32s3_tft' => {
-          name: 'Adafruit Feather ESP32-S3 TFT',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit Feather ESP32-S3 TFT'
         },
         'esp32:esp32:adafruit_metro_esp32s3' => {
-          name: 'Adafruit Metro ESP32-S3',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit Metro ESP32-S3'
         },
         'esp32:esp32:adafruit_qtpy_esp32s3_nopsram' => {
-          name: 'Adafruit QT Py ESP32-S3 No PSRAM',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'Adafruit QT Py ESP32-S3 No PSRAM'
         },
         'esp32:esp32:esp32s3' => {
-          name: 'ESP32S3 Dev Module',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'ESP32S3 Dev Module'
         },
         'esp32:esp32:esp32s3-octal' => {
-          name: 'ESP32S3 Dev Module Octal (WROOM2)',
-          strategy: 'esp32_s3',
-          config_options: STRATEGY_TEMPLATES['esp32_s3'].dup
+          name: 'ESP32S3 Dev Module Octal (WROOM2)'
         }
-        
+
         # Add new boards here following the pattern above
       }.freeze
 
@@ -141,11 +97,6 @@ module Grot
         supported_boards[fqbn]
       end
 
-      # Get all boards that use a specific strategy
-      def self.get_boards_by_strategy(strategy)
-        supported_boards.select { |_, info| info[:strategy] == strategy }
-      end
-
       # Get a list of all board names with their FQBNs for display
       def self.list_supported_boards
         supported_boards.map { |fqbn, info| "#{info[:name]} (#{fqbn})" }
@@ -156,16 +107,10 @@ module Grot
         supported_boards.key?(fqbn)
       end
 
-      # Get the appropriate strategy name for a given FQBN
-      def self.strategy_for(fqbn)
+      # Get the FQBN options spec for a given board
+      def self.fqbn_options_for(fqbn)
         info = get_board_info(fqbn)
-        info ? info[:strategy] : 'default'
-      end
-
-      # Get the config options template for a given FQBN
-      def self.config_options_for(fqbn)
-        info = get_board_info(fqbn)
-        info && info[:config_options] ? info[:config_options] : {}
+        info && info[:fqbn_options] ? info[:fqbn_options] : {}
       end
     end
   end

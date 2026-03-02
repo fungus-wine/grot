@@ -11,7 +11,6 @@ require "grot/commands/command_handlers"
 require "grot/config/config_manager"
 require "grot/ports/port_handler"
 require "grot/boards/board_registry"
-require "grot/boards/board_strategy_factory"
 require "open3"
 require "timeout"
 
@@ -58,10 +57,6 @@ module Grot
       rescue Grot::Errors::ConfigurationError => e
         error "Configuration error: #{e.message}"
         info "You may need to run 'grot init' to create or fix your configuration."
-        return 1
-      rescue Grot::Errors::BoardStrategyError => e
-        error "Board configuration error: #{e.message}"
-        info "Check your board settings in the configuration file."
         return 1
       rescue Grot::Errors::SerialPortError => e
         error "Serial port error: #{e.message}"
@@ -123,12 +118,6 @@ module Grot
         validate_config(command_definition)
       end
       
-      # Create board strategy if needed for later use (commands that require fqbn are board-specific)
-      board_strategy = nil
-      if requirements.include?(:fqbn) && @config && @config.dig(:basic, :fqbn)
-        board_strategy = Boards::BoardStrategyFactory.create_strategy(@config)
-      end
-      
       # Execute the command
       result = nil
       cmd = nil
@@ -161,14 +150,6 @@ module Grot
         end
       else
         raise Grot::Errors::CommandError, "Command #{command_name} has no action defined"
-      end
-      
-      # If we have a board strategy that executed a compilation command internally,
-      # display it now at the very end
-      if board_strategy && board_strategy.respond_to?(:last_executed_compile_cmd) && 
-         board_strategy.last_executed_compile_cmd
-        puts ""
-        display_executed_command(board_strategy.last_executed_compile_cmd)
       end
       
       return result

@@ -12,15 +12,9 @@ module Grot
         logs_directory: "#{Dir.home}/grot_logs"
       },
 
-      # Board-specific defaults
-      esp32_options: {
-        core_config: "dual",
-        frequency: 240
-      },
-
       giga_options: {
-        target_core: "CM7",
-        flash_split: 0.5
+        target_core: "cm7",
+        split: "50_50"
       }
     }.freeze
   end

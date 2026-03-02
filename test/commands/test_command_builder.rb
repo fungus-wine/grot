@@ -44,6 +44,29 @@ class TestCommandBuilder < Minitest::Test
     assert_equal 'arduino-cli monitor --port /dev/ttyUSB0', cmd
   end
   
+  def test_build_command_with_giga_fqbn_options
+    @command_registry.expects(:get_command).with('build').returns({
+      action: 'compile',
+      requirements: [:sketch_path, :fqbn],
+      verbose: false
+    })
+
+    config = {
+      :basic => {
+        :cli_path => 'arduino-cli',
+        :sketch_path => '.',
+        :fqbn => 'arduino:mbed_giga:giga'
+      },
+      :giga_options => {
+        :target_core => 'cm7',
+        :split => '50_50'
+      }
+    }
+
+    cmd = @builder.build_command('build', config)
+    assert_equal 'arduino-cli compile . --fqbn arduino:mbed_giga:giga:target_core=cm7,split=50_50', cmd
+  end
+
   def test_build_command_non_cli
     @command_registry.expects(:get_command).with('custom').returns({
       action: ->(app) { true }

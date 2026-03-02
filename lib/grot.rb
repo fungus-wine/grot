@@ -10,12 +10,6 @@ require "grot/config/config_manager"
 
 # Board-related requires
 require "grot/boards/board_registry"
-require "grot/boards/board_strategy_factory"
-
-require "grot/boards/strategies/base_board_strategy"
-require "grot/boards/strategies/default_board_strategy"
-require "grot/boards/strategies/esp32_s3_board_strategy"
-require "grot/boards/strategies/giga_board_strategy"
 
 # CLI-related requires
 require "grot/cli/cli_parser"

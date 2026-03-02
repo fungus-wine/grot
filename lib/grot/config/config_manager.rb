@@ -55,7 +55,7 @@ module Grot
         validate_string(config, :basic, :cli_path)
         validate_string(config, :basic, :sketch_path)
         validate_string(config, :giga_options, :target_core)
-        validate_string(config, :esp32_options, :core_config)
+        validate_string(config, :giga_options, :split)
         validate_string(config, :interface, :logs_directory)
 
         # Keep the useful FQBN validation
@@ -65,8 +65,6 @@ module Grot
 
         # Simple type coercion for key fields
         coerce_integer(config, :interface, :baud_rate)
-        coerce_integer(config, :esp32_options, :frequency)
-        coerce_float(config, :giga_options, :flash_split)
       end
       
       def self.validate_string(config, section, key)
@@ -84,15 +82,6 @@ module Grot
         config[section][key] = Integer(value)
       rescue ArgumentError, TypeError
         raise "#{section}.#{key} must be an integer, got: #{value}"
-      end
-      
-      def self.coerce_float(config, section, key)
-        value = config.dig(section, key)
-        return unless value
-        
-        config[section][key] = Float(value)
-      rescue ArgumentError, TypeError
-        raise "#{section}.#{key} must be a number, got: #{value}"
       end
       
       def self.validate_fqbn(fqbn)
@@ -166,16 +155,11 @@ module Grot
           
           # Board-specific configuration options
           # These sections are only needed for specific boards and are otherwise ignored
-          
+
           [giga_options]
-          # Options for Arduino GIGA R1 WiFi boards
-          # target_core = "#{DEFAULTS[:giga_options][:target_core]}"     # Target processor core: "CM4" or "CM7"
-          # flash_split = #{DEFAULTS[:giga_options][:flash_split]}       # Memory split ratio (0.0 to 1.0)
-          
-          [esp32_options]
-          # Options for ESP32-S3 boards
-          # core_config = "#{DEFAULTS[:esp32_options][:core_config]}"    # Core usage: "dual", "single-0", "single-1"
-          # frequency = #{DEFAULTS[:esp32_options][:frequency]}          # CPU frequency in MHz: 80, 160, or 240
+          # Options for Arduino GIGA R1 WiFi boards (appended to FQBN during compile/upload)
+          # target_core = "#{DEFAULTS[:giga_options][:target_core]}"     # Target processor core: "cm4" or "cm7"
+          # split = "#{DEFAULTS[:giga_options][:split]}"                 # Flash split: "100_0", "75_25", or "50_50"
         TOML
       end
     end
