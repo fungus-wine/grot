@@ -8,14 +8,10 @@ module Grot
       },
 
       interface: {
-        baud_rate: 9600,
+        baud_rate: 115200,
         logs_directory: "#{Dir.home}/grot_logs"
       },
 
-      giga_options: {
-        target_core: "cm7",
-        split: "50_50"
-      }
     }.freeze
   end
 end
