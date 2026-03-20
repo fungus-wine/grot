@@ -49,7 +49,7 @@ module Grot
           description: "Upload sketch to board",
           requirements: [:config, :fqbn, :port, :sketch_path],
           verbose: false,
-          spinner_message: "Uploading to board",
+          real_time_output: true,
           post_action: ->(app, cmd) { app.display_executed_command(cmd) },
           action: "upload"
         },

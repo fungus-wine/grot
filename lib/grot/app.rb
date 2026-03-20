@@ -191,7 +191,10 @@ module Grot
       end
       
       if requirements.include?(:port) && !@config.dig(:basic, :port)
-        raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
+        fqbn = @config.dig(:basic, :fqbn)
+        unless fqbn && Grot::Boards::BoardRegistry.loader_for(fqbn) == :teensy_loader_cli
+          raise Grot::Errors::ConfigurationError, "Serial port not specified in config"
+        end
       end
       
       if requirements.include?(:sketch_path) && !@config.dig(:basic, :sketch_path)
