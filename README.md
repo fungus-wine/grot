@@ -60,11 +60,11 @@ baud_rate = 9600
 
 Grot is a work in progress. Especially lacking is board support simply because I can't test boards I don't own. I've made some guesses about boards that will work, but I've not even tested all of the "supported" boards. So far, I have used it successfully with:
 
--Arduino Uno
--Arduino GIGA R1 WiFi
--Teensy 4.1
--Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)
--Adafruit Feather ESP32-S3 Revese TFT
+- Arduino Uno
+- Arduino GIGA R1 WiFi
+- Teensy 4.1
+- Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)
+- Adafruit Feather ESP32-S3 Reverse TFT
 
 ### AI
 
